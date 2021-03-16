@@ -11,86 +11,69 @@ import java.util.HashMap;
 import java.util.List;
 
 public class SamfNinja extends ApplicationAdapter {
-	SpriteBatch batch;
+	SpriteBatch beerDrawer;
 	Socket socket;
-	List<List<Integer>> generatedSprites;
-	private float timer;
+	GeneratedBeerData generatedSprites;
+	private float timer = -2;
 	private float gameEndTime = 5000;
-	final HashMap<Integer, Bottle> bottles = new HashMap<>();
+	private int numberOfBottles;
 
 	@Override
 	public void create () {
-		Sound beerPop = Gdx.audio.newSound(Gdx.files.internal("crack.mp3"));
-		beerPop.play();
-		batch = new SpriteBatch();
+		// instancing a new batch drawer
+		beerDrawer = new SpriteBatch();
+		// connect the socket and receive generated sprites from the server
 		socket = new Socket();
 		generatedSprites = socket.generateSprites();
-		timer=-2;
-	}
 
-	private void drawBottle(int index) {
-		Bottle bottle = bottles.get(index);
-		batch.begin();
-		batch.draw(bottle.beerTexture, bottle.getXOffset(timer), bottle.getYOffset(timer));
-		batch.end();
-	}
-
-	private void createBeerSprites() {
-		int numberOfBeer = bottles.size();
-
-		if (numberOfBeer == generatedSprites.size() - 1) {
-			gameEndTime = timer + 5;
-		}
-
-		if (timer>=gameEndTime) {
-			gameOver();
-			return;
-		}
-
-		for (int i = 0; i < generatedSprites.size(); i++) {
-			List<Integer> beer = generatedSprites.get(i);
-
-			float beerSpawnTime = beer.get(0)/2;
-			if(timer>=beerSpawnTime){
-				int yPos = beer.get(1);
-				int beerPlayer = beer.get(2);
-				int bottleVelocity = beer.get(3);
-				Bottle bottle = new Bottle(beerPlayer, yPos, bottleVelocity, beerSpawnTime);
-
-				bottles.put(i, bottle);
-			}
-		}
-
-		if (bottles.size() > numberOfBeer) {
-			//Sound beerPop = Gdx.audio.newSound(Gdx.files.internal("pop.mp3"));
-			//beerPop.play();
-		}
-
-		for (int i = 0; i < bottles.size(); i++) {
-			drawBottle(i);
-		}
+		// play sound to start off the game
+		Sound beerPop = Gdx.audio.newSound(Gdx.files.internal("crack.mp3"));
+		beerPop.play();
 	}
 
 	@Override
 	public void render () {
-		Gdx.gl.glClearColor(0, 0, 0, 0);
-		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 		timer += Gdx.graphics.getDeltaTime();
 
-		batch.begin();
-		batch.draw(new Texture("map1.png"), 0, 0);
-		batch.end();
+		beerDrawer.begin();
+		beerDrawer.draw(new Texture("map1.png"), 0, 0);
+		beerDrawer.end();
 		createBeerSprites();
 	}
 
+	private void createBeerSprites() {
+		if (numberOfBottles == generatedSprites.size() - 1) {
+			gameEndTime = timer + 5;
+		}
+
+		if (timer >= gameEndTime) {
+			gameOver();
+			return;
+		}
+
+		List<Bottle> beerBottles = generatedSprites.spawn(timer);
+		numberOfBottles = beerBottles.size();
+
+		for (Bottle beerBottle : beerBottles) {
+			beerDrawer.begin();
+			beerDrawer.draw(beerBottle.beerTexture, beerBottle.getXOffset(timer), beerBottle.getYOffset(timer));
+			beerDrawer.end();
+		}
+
+		if (beerBottles.size() > numberOfBottles) {
+			//Sound beerPop = Gdx.audio.newSound(Gdx.files.internal("pop.mp3"));
+			//beerPop.play();
+		}
+	}
+
 	public void gameOver() {
-		batch.begin();
-		batch.draw(new Texture("gameOver.png"), 50, 500);
-		batch.end();
+		beerDrawer.begin();
+		beerDrawer.draw(new Texture("gameOver.png"), 50, 500);
+		beerDrawer.end();
 	}
 	
 	@Override
 	public void dispose () {
-		batch.dispose();
+		beerDrawer.dispose();
 	}
 }

@@ -9,7 +9,7 @@ public class Socket {
         return false;
     }
 
-    public List<List<Integer>> generateSprites() {
+    public GeneratedBeerData generateSprites() {
         //testing function for now
         //
         // TODO: call server to set up connection
@@ -60,7 +60,7 @@ public class Socket {
             add(200);
         }};
 
-        return new ArrayList<List<Integer>>() {{
+        final ArrayList<List<Integer>> data = new ArrayList<List<Integer>>() {{
             add(test1);
             add(test2);
             add(test3);
@@ -68,6 +68,8 @@ public class Socket {
             add(test5);
             add(test6);
         }};
+
+        return new GeneratedBeerData(data);
     }
 
 }
