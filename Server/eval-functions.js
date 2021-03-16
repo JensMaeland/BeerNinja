@@ -80,4 +80,5 @@ const chooseWinningPlayer = (beer1, beer2) => {
 
 module.exports = {
   generateListOfBeerObjects,
+  chooseWinningPlayer,
 };
