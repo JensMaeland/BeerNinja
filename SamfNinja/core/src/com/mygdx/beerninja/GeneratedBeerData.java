@@ -20,13 +20,15 @@ public class GeneratedBeerData {
         socket = inputSocket;
     }
 
-    public List<Bottle> spawn(float gameTime, int screenHeight) {
+    public List<Bottle> spawn(double gameTime, int screenHeight) {
         List<Bottle> bottles = new ArrayList<>();
-        String player = socket.getPlayer();
+        String player = socket.player;
+
+        System.out.println(player);
 
         try {
             for (JSONObject spriteData : data) {
-                float beerSpawnTime = (float) spriteData.get("secondsToSpawn");
+                double beerSpawnTime = (double) spriteData.get("secondsToSpawn");
 
                 if(gameTime > beerSpawnTime) {
                     int bottleId = (int) spriteData.get("id");
@@ -46,7 +48,7 @@ public class GeneratedBeerData {
         return bottles;
     }
 
-    public void caughtBottle(int id, float xPos) {
+    public void caughtBottle(int id, double xPos) {
         JSONObject slicedBeer = null;
         
         for (JSONObject spriteData : data) {

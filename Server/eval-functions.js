@@ -20,13 +20,13 @@ const generateListOfBeerObjects = (numberOfBeerObjects) => {
 
   for (i = 0; i < numberOfBeerObjects; i++) {
     if (Math.random() > 0.5 && playerOne >= 1) {
-      playerNumber = 0;
+      playerNumber = "0_player0";
       playerOne--;
     } else if (playerTwo >= 1) {
-      playerNumber = 1;
+      playerNumber = "1_player1";
       playerTwo--;
     } else {
-      playerNumber = 0;
+      playerNumber = "0_player0";
       playerOne--;
     }
     //playerID = players[playerNumber];
@@ -68,7 +68,7 @@ const generateListOfBeerObjects = (numberOfBeerObjects) => {
   return spriteList;
 };
 
-const addBeerToQueue = (beer) => {};
+const addBeerToQueue = (beer) => { };
 
 const chooseWinningPlayer = (beer1, beer2) => {
   if (beer1.x > beer2.x) {

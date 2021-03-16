@@ -21,7 +21,7 @@ io.on("connection", (socket) => {
     bottleList: generateListOfBeerObjects(30),
   });
 
-  socket.on("caughtBottle", (bottle) => {});
+  socket.on("caughtBottle", (bottle) => { console.log(bottle) });
 
   socket.on("disconnect", function () {
     console.log("Player Disconnected");

@@ -16,8 +16,8 @@ public class SamfNinja extends ApplicationAdapter {
 	GeneratedBeerData generatedSprites;
 	List<Bottle> beerBottles = new ArrayList<>();
 	List<Touch> touches = new ArrayList<>();
-	private float timer = -2;
-	private float gameEndTime = 5000;
+	private double timer = -2;
+	private double gameEndTime = 5000;
 	private int screenHeight = 1050;
 
 	@Override
@@ -27,6 +27,7 @@ public class SamfNinja extends ApplicationAdapter {
 		// connect the socket and receive generated sprites from the server
 		socket = new BeerSocket();
 		socket.connect();
+		socket.setUp();
 		generatedSprites = socket.generateSprites();
 
 		// play sound to start off the game
@@ -75,8 +76,13 @@ public class SamfNinja extends ApplicationAdapter {
 
 		beerBottles = generatedSprites.spawn(timer, screenHeight);
 		for (Bottle beerBottle : beerBottles) {
+			double x = beerBottle.getXOffset(timer);
+			double y = beerBottle.getYOffset(timer);
+			float xPos = (float) x;
+			float yPos = (float) y;
+
 			beerDrawer.begin();
-			beerDrawer.draw(beerBottle.beerTexture, beerBottle.getXOffset(timer), beerBottle.getYOffset(timer));
+			beerDrawer.draw(beerBottle.beerTexture, xPos, yPos);
 			beerDrawer.end();
 		}
 
@@ -99,10 +105,10 @@ public class SamfNinja extends ApplicationAdapter {
 		int beerHeight = 200;
 
 		for (Bottle beerBottle : beerBottles) {
-			float minX = beerBottle.getXOffset(timer);
-			float minY = beerBottle.getYOffset(timer);
-			float maxX = minX + beerWidth;
-			float maxY = minY + beerHeight;
+			Double minX = beerBottle.getXOffset(timer);
+			Double minY = beerBottle.getYOffset(timer);
+			double maxX = minX + beerWidth;
+			double maxY = minY + beerHeight;
 
 			if (minX <= touch.x && touch.x <= maxX) {
 				if (minY <= touch.y && touch.y <= maxY) {

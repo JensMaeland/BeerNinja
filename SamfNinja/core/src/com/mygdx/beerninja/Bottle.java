@@ -6,7 +6,7 @@ import com.badlogic.gdx.graphics.Texture;
 public class Bottle extends ApplicationAdapter {
     Texture beerTexture;
     Integer bottleId;
-    float beerSpawnTime;
+    double beerSpawnTime;
     String playerString;
     String myPlayerString;
     Integer xPos;
@@ -14,7 +14,7 @@ public class Bottle extends ApplicationAdapter {
     Integer bottleVelocity;
     final int screenWidth = 500;
 
-    public Bottle(int id, String bottlePlayer, int y, int velocity, float spawnTime, int screenHeight, String myPlayer) {
+    public Bottle(int id, String bottlePlayer, int y, int velocity, Double spawnTime, int screenHeight, String myPlayer) {
         bottleId = id;
         playerString = bottlePlayer;
         beerTexture = getTexture(bottlePlayer, myPlayer);
@@ -30,7 +30,7 @@ public class Bottle extends ApplicationAdapter {
             return new Texture("pils.png");
         }
         else {
-            return new Texture("fatol.png");
+            return new Texture("dag.png");
         }
     }
 
@@ -45,8 +45,8 @@ public class Bottle extends ApplicationAdapter {
         }
     }
 
-    public float getXOffset(float gameTime) {
-        float offset = gameTime - beerSpawnTime;
+    public Double getXOffset(Double gameTime) {
+        Double offset = gameTime - beerSpawnTime;
 
         if (playerString.equals(myPlayerString)) {
             return xPos + offset*bottleVelocity;
@@ -56,8 +56,8 @@ public class Bottle extends ApplicationAdapter {
         }
     }
 
-    public float getYOffset(float gameTime) {
-        float offset = (gameTime - beerSpawnTime)/2;
+    public Double getYOffset(Double gameTime) {
+        Double offset = (gameTime - beerSpawnTime)/2;
 
         return yPos - offset*bottleVelocity;
     }

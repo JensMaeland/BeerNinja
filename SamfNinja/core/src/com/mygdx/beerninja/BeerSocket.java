@@ -5,12 +5,13 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.List;
 import io.socket.client.IO;
 import io.socket.client.Socket;
 import io.socket.emitter.Emitter;
-import jdk.nashorn.api.scripting.JSObject;
-import jdk.nashorn.internal.parser.JSONParser;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 
 public class BeerSocket {
     String player;
@@ -26,8 +27,20 @@ public class BeerSocket {
         }
     }
 
-    public String getPlayer() {
-        return player;
+    public void setUp() {
+        socket.on("socketID", new Emitter.Listener() {
+                    @Override
+                    public void call(Object... args) {
+                        JSONObject receivedData = (JSONObject) args[0];
+                        try {
+                            player = receivedData.getString("id");
+                            System.out.println(player);
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+        );
     }
 
     public GeneratedBeerData generateSprites() {
@@ -45,7 +58,6 @@ public class BeerSocket {
 
         try {
             Thread.sleep(1000);
-            System.out.println(data);
 
             ArrayList<JSONObject> result = new ArrayList<>();
             if (data != null) {
@@ -54,7 +66,6 @@ public class BeerSocket {
                 }
             }
 
-            System.out.println(result);
             return new GeneratedBeerData(result, this);
         } catch (InterruptedException | JSONException e) {
             e.printStackTrace();
@@ -63,8 +74,19 @@ public class BeerSocket {
         return null;
     }
 
-    public boolean caughtBottle(int id, float xPos) {
-        // send bottle id, player, current time and x-coordinates
+    public boolean caughtBottle(int id, double xPos) {
+        float timestamp = System.currentTimeMillis();
+        CaughtBottle bottle = new CaughtBottle(id, timestamp, xPos, player);
+
+        ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
+
+        try {
+            String json = ow.writeValueAsString(bottle);
+            socket.emit("caughtBottle", json);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+
         return false;
     }
 
