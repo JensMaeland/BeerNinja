@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.Texture;
 
 public class Bottle extends ApplicationAdapter {
     Texture beerTexture;
+    Integer bottleId;
     float beerSpawnTime;
     Integer playerNumber;
     Integer xPos;
@@ -12,7 +13,8 @@ public class Bottle extends ApplicationAdapter {
     Integer bottleVelocity;
     final int screenWidth = 500;
 
-    public Bottle(int player, int y, int velocity, float spawnTime, int screenHeight) {
+    public Bottle(int id, int player, int y, int velocity, float spawnTime, int screenHeight) {
+        bottleId = id;
         playerNumber = player;
         beerTexture = getTexture(player);
         beerSpawnTime = spawnTime;
