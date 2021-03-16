@@ -14,16 +14,18 @@ public class GeneratedBeerData {
         return data.size();
     }
 
-    public List<Bottle> spawn(float gameTime) {
+    public List<Bottle> spawn(float gameTime, int screenHeight) {
         List<Bottle> bottles = new ArrayList<>();
 
         for (List<Integer> spriteData : data) {
             float beerSpawnTime = spriteData.get(0);
+
             if(gameTime > beerSpawnTime) {
                 int yPos = spriteData.get(1);
                 int beerPlayer = spriteData.get(2);
                 int bottleVelocity = spriteData.get(3);
-                Bottle bottle = new Bottle(beerPlayer, yPos, bottleVelocity, beerSpawnTime);
+
+                Bottle bottle = new Bottle(beerPlayer, yPos, bottleVelocity, beerSpawnTime, screenHeight);
                 bottles.add(bottle);
             }
         }

@@ -10,11 +10,9 @@ public class Bottle extends ApplicationAdapter {
     Integer xPos;
     Integer yPos;
     Integer bottleVelocity;
+    final int screenWidth = 500;
 
-    private int screenWidth = 500;
-    private int screenHeight = 1000;
-
-    public Bottle(int player, int y, int velocity, float spawnTime) {
+    public Bottle(int player, int y, int velocity, float spawnTime, int screenHeight) {
         playerNumber = player;
         beerTexture = getTexture(player);
         beerSpawnTime = spawnTime;
