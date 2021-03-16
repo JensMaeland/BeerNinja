@@ -1,4 +1,4 @@
-const { generateListOfSprites } = require("./eval-functions");
+const { generateListOfBeerObjects } = require("./eval-functions");
 const app = require("express")();
 const httpServer = require("http").createServer(app);
 const options = {
@@ -6,10 +6,7 @@ const options = {
 };
 const io = require("socket.io")(httpServer, options);
 
-const users = [];
-
-const red = [];
-const blue = [];
+const players = [];
 
 /*Server now listens to port 8080*/
 httpServer.listen(8080, () => {
@@ -17,11 +14,11 @@ httpServer.listen(8080, () => {
 });
 
 io.on("connection", (socket) => {
-  console.log("Player connected");
+  players.push(socket.id);
   socket.emit("socketID", { id: socket.id });
 
   socket.emit("bottleList", {
-    bottleList: generateListOfSprites(30),
+    bottleList: generateListOfBeerObjects(30),
   });
 
   socket.on("caughtBottle", (bottle) => {});
@@ -31,4 +28,6 @@ io.on("connection", (socket) => {
   });
 });
 
-console.log(generateListOfSprites(30));
+console.log(generateListOfBeerObjects(30));
+
+module.exports = players;
