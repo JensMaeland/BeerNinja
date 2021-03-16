@@ -1,5 +1,7 @@
 package com.mygdx.beerninja;
 
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -8,10 +10,12 @@ import io.socket.client.IO;
 import io.socket.client.Socket;
 import io.socket.emitter.Emitter;
 import jdk.nashorn.api.scripting.JSObject;
+import jdk.nashorn.internal.parser.JSONParser;
 
 public class BeerSocket {
-    int player;
+    String player;
     private Socket socket;
+    JSONArray data;
 
     public void connect() {
         try {
@@ -22,84 +26,41 @@ public class BeerSocket {
         }
     }
 
-    public GeneratedBeerData generateSprites() {
-        final List<List<Integer>> data;
+    public String getPlayer() {
+        return player;
+    }
 
+    public GeneratedBeerData generateSprites() {
         socket.on("bottleList", new Emitter.Listener() {
             @Override
             public void call(Object... args) {
                 JSONObject receivedData = (JSONObject) args[0];
-                System.out.println(args[0]);
-                //data = receivedData.getString("bottleList");
+                try {
+                    data = (JSONArray) receivedData.get("bottleList");
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
             }
         });
-        //testing function for now
-        //
-        // TODO: call server to set up connection
-        final ArrayList<Integer> test1 = new ArrayList<Integer>()  {{
-            // id of bottle
-            add(0);
-            // seconds to spawn
-            add(0);
-            // offset Y from top
-            add(200);
-            // player 1 or player 2
-            add(1);
-            // bottle velocity
-            add(200);
-        }};
 
-        final ArrayList<Integer> test2 = new ArrayList<Integer>()  {{
-            add(1);
-            add(1);
-            add(240);
-            add(2);
-            add(300);
-        }};
+        try {
+            Thread.sleep(1000);
+            System.out.println(data);
 
-        final ArrayList<Integer> test3 = new ArrayList<Integer>()  {{
-            add(2);
-            add(2);
-            add(200);
-            add(1);
-            add(300);
+            ArrayList<JSONObject> result = new ArrayList<>();
+            if (data != null) {
+                for (int i=0;i<data.length();i++){
+                    result.add((JSONObject) data.get(i));
+                }
+            }
 
-        }};
+            System.out.println(result);
+            return new GeneratedBeerData(result, this);
+        } catch (InterruptedException | JSONException e) {
+            e.printStackTrace();
+        }
 
-        final ArrayList<Integer> test4 = new ArrayList<Integer>()  {{
-            add(3);
-            add(4);
-            add(130);
-            add(2);
-            add(200);
-        }};
-
-        final ArrayList<Integer> test5 = new ArrayList<Integer>()  {{
-            add(4);
-            add(5);
-            add(20);
-            add(1);
-            add(400);
-        }};
-
-        final ArrayList<Integer> test6 = new ArrayList<Integer>()  {{
-            add(5);
-            add(7);
-            add(400);
-            add(2);
-            add(200);
-        }};
-
-        final ArrayList<List<Integer>> testData = new ArrayList<List<Integer>>() {{
-            add(test1);
-            add(test2);
-            add(test3);
-            add(test4);
-            add(test5);
-            add(test6);
-        }};
-
-        return new GeneratedBeerData(testData, this);
+        return null;
     }
 
     public boolean caughtBottle(int id, float xPos) {

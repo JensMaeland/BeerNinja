@@ -3,15 +3,18 @@ package com.mygdx.beerninja;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Sound;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class GeneratedBeerData {
-    List<List<Integer>> data;
+    List<JSONObject> data;
     Integer size;
     BeerSocket socket;
 
-    public GeneratedBeerData(List<List<Integer>> input, BeerSocket inputSocket) {
+    public GeneratedBeerData(ArrayList<JSONObject> input, BeerSocket inputSocket) {
         data = input;
         size = input.size();
         socket = inputSocket;
@@ -19,31 +22,41 @@ public class GeneratedBeerData {
 
     public List<Bottle> spawn(float gameTime, int screenHeight) {
         List<Bottle> bottles = new ArrayList<>();
+        String player = socket.getPlayer();
 
-        for (List<Integer> spriteData : data) {
-            float beerSpawnTime = spriteData.get(1);
+        try {
+            for (JSONObject spriteData : data) {
+                float beerSpawnTime = (float) spriteData.get("secondsToSpawn");
 
-            if(gameTime > beerSpawnTime) {
-                int bottleId = spriteData.get(0);
-                int yPos = spriteData.get(2);
-                int beerPlayer = spriteData.get(3);
-                int bottleVelocity = spriteData.get(4);
+                if(gameTime > beerSpawnTime) {
+                    int bottleId = (int) spriteData.get("id");
+                    int yPos = (int) spriteData.get("offsetY");
+                    String beerPlayer = (String) spriteData.get("player");
+                    int bottleVelocity = (int) spriteData.get("velocity");
 
-                Bottle bottle = new Bottle(bottleId, beerPlayer, yPos, bottleVelocity, beerSpawnTime, screenHeight);
-                bottles.add(bottle);
+                    Bottle bottle = new Bottle(bottleId, beerPlayer, yPos, bottleVelocity, beerSpawnTime, screenHeight, player);
+                    bottles.add(bottle);
+                }
             }
+        }
+        catch (JSONException e) {
+            e.printStackTrace();
         }
 
         return bottles;
     }
 
     public void caughtBottle(int id, float xPos) {
-        List<Integer> slicedBeer = null;
+        JSONObject slicedBeer = null;
         
-        for (List<Integer> spriteData : data) {
-            int bottleId = spriteData.get(0);
-            if (bottleId == id) {
-                slicedBeer = spriteData;    
+        for (JSONObject spriteData : data) {
+            try {
+                int bottleId = (int) spriteData.get("id");
+                if (bottleId == id) {
+                    slicedBeer = spriteData;
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
             }
         }
 

@@ -7,56 +7,53 @@ public class Bottle extends ApplicationAdapter {
     Texture beerTexture;
     Integer bottleId;
     float beerSpawnTime;
-    Integer playerNumber;
+    String playerString;
+    String myPlayerString;
     Integer xPos;
     Integer yPos;
     Integer bottleVelocity;
     final int screenWidth = 500;
 
-    public Bottle(int id, int player, int y, int velocity, float spawnTime, int screenHeight) {
+    public Bottle(int id, String bottlePlayer, int y, int velocity, float spawnTime, int screenHeight, String myPlayer) {
         bottleId = id;
-        playerNumber = player;
-        beerTexture = getTexture(player);
+        playerString = bottlePlayer;
+        beerTexture = getTexture(bottlePlayer, myPlayer);
         beerSpawnTime = spawnTime;
-        xPos = getXPos(player);
+        xPos = getXPos(bottlePlayer, myPlayer);
         yPos = screenHeight - y;
         bottleVelocity = velocity;
+        myPlayerString = myPlayer;
     }
 
-    private Texture getTexture(int player) {
-        if (player == 1) {
+    private Texture getTexture(String player, String me) {
+        if (player.equals(me)) {
             return new Texture("pils.png");
         }
-        else if (player == 2) {
+        else {
             return new Texture("fatol.png");
         }
-
-        return new Texture("");
     }
 
-    private int getXPos(int player) {
+    private int getXPos(String player, String me) {
         int margin = 80;
 
-        if (player == 1) {
+        if (player.equals(me)) {
             return 0 - margin;
         }
-        else if (player == 2) {
+        else {
             return screenWidth + margin;
         }
-
-        return 0;
     }
 
     public float getXOffset(float gameTime) {
         float offset = gameTime - beerSpawnTime;
 
-        if (playerNumber == 1) {
+        if (playerString.equals(myPlayerString)) {
             return xPos + offset*bottleVelocity;
         }
-        else if (playerNumber == 2) {
+        else {
             return xPos - offset*bottleVelocity;
         }
-        return 0;
     }
 
     public float getYOffset(float gameTime) {
