@@ -11,7 +11,6 @@ import io.socket.emitter.Emitter;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectWriter;
 
 public class BeerSocket {
     String player;
@@ -29,18 +28,16 @@ public class BeerSocket {
 
     public void setUp() {
         socket.on("socketID", new Emitter.Listener() {
-                    @Override
-                    public void call(Object... args) {
-                        JSONObject receivedData = (JSONObject) args[0];
-                        try {
-                            player = receivedData.getString("id");
-                            System.out.println(player);
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-                    }
+            @Override
+            public void call(Object... args) {
+                JSONObject receivedData = (JSONObject) args[0];
+                try {
+                    player = receivedData.getString("id");
+                } catch (JSONException e) {
+                    e.printStackTrace();
                 }
-        );
+            }
+        });
     }
 
     public GeneratedBeerData generateSprites() {
@@ -78,10 +75,9 @@ public class BeerSocket {
         float timestamp = System.currentTimeMillis();
         CaughtBottle bottle = new CaughtBottle(id, timestamp, xPos, player);
 
-        ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
-
+        ObjectMapper mapper = new ObjectMapper();
         try {
-            String json = ow.writeValueAsString(bottle);
+            String json = mapper.writeValueAsString(bottle);
             socket.emit("caughtBottle", json);
         } catch (JsonProcessingException e) {
             e.printStackTrace();

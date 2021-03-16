@@ -1,10 +1,10 @@
 package com.mygdx.beerninja;
 
 public class CaughtBottle {
-    int id;
-    double time;
-    double xcoor;
-    String playerId;
+    public int id;
+    public double time;
+    public double xcoor;
+    public String playerId;
 
     public CaughtBottle(int bottleId, double timestamp, double xPos, String player) {
         id = bottleId;

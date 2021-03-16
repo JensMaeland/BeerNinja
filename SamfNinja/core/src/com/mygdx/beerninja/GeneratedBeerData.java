@@ -24,8 +24,6 @@ public class GeneratedBeerData {
         List<Bottle> bottles = new ArrayList<>();
         String player = socket.player;
 
-        System.out.println(player);
-
         try {
             for (JSONObject spriteData : data) {
                 double beerSpawnTime = (double) spriteData.get("secondsToSpawn");
