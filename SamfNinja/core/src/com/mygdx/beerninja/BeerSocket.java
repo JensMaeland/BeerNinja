@@ -1,20 +1,38 @@
 package com.mygdx.beerninja;
 
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.List;
+import io.socket.client.IO;
+import io.socket.client.Socket;
+import io.socket.emitter.Emitter;
+import jdk.nashorn.api.scripting.JSObject;
 
-public class Socket {
+public class BeerSocket {
     int player;
+    private Socket socket;
 
-    public boolean connect() {
-        return false;
-    }
-
-    public boolean caughtBottle(int id) {
-        return false;
+    public void connect() {
+        try {
+            socket = IO.socket("http://localhost:8080");
+            socket.connect();
+        } catch(Exception e) {
+            System.out.println(e);
+        }
     }
 
     public GeneratedBeerData generateSprites() {
+        final List<List<Integer>> data;
+
+        socket.on("bottleList", new Emitter.Listener() {
+            @Override
+            public void call(Object... args) {
+                JSONObject receivedData = (JSONObject) args[0];
+                System.out.println(args[0]);
+                //data = receivedData.getString("bottleList");
+            }
+        });
         //testing function for now
         //
         // TODO: call server to set up connection
@@ -72,7 +90,7 @@ public class Socket {
             add(200);
         }};
 
-        final ArrayList<List<Integer>> data = new ArrayList<List<Integer>>() {{
+        final ArrayList<List<Integer>> testData = new ArrayList<List<Integer>>() {{
             add(test1);
             add(test2);
             add(test3);
@@ -81,7 +99,12 @@ public class Socket {
             add(test6);
         }};
 
-        return new GeneratedBeerData(data, this);
+        return new GeneratedBeerData(testData, this);
+    }
+
+    public boolean caughtBottle(int id, float xPos) {
+        // send bottle id, player, current time and x-coordinates
+        return false;
     }
 
 }

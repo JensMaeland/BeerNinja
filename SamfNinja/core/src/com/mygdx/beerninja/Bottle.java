@@ -38,10 +38,10 @@ public class Bottle extends ApplicationAdapter {
         int margin = 80;
 
         if (player == 1) {
-            return screenWidth + margin;
+            return 0 - margin;
         }
         else if (player == 2) {
-            return 0 - margin;
+            return screenWidth + margin;
         }
 
         return 0;
@@ -51,10 +51,10 @@ public class Bottle extends ApplicationAdapter {
         float offset = gameTime - beerSpawnTime;
 
         if (playerNumber == 1) {
-            return xPos - offset*bottleVelocity;
+            return xPos + offset*bottleVelocity;
         }
         else if (playerNumber == 2) {
-            return xPos + offset*bottleVelocity;
+            return xPos - offset*bottleVelocity;
         }
         return 0;
     }

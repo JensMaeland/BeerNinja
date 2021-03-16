@@ -12,7 +12,7 @@ import java.util.List;
 
 public class SamfNinja extends ApplicationAdapter {
 	SpriteBatch beerDrawer;
-	Socket socket;
+	BeerSocket socket;
 	GeneratedBeerData generatedSprites;
 	List<Bottle> beerBottles = new ArrayList<>();
 	List<Touch> touches = new ArrayList<>();
@@ -25,7 +25,8 @@ public class SamfNinja extends ApplicationAdapter {
 		// instancing a new batch drawer
 		beerDrawer = new SpriteBatch();
 		// connect the socket and receive generated sprites from the server
-		socket = new Socket();
+		socket = new BeerSocket();
+		socket.connect();
 		generatedSprites = socket.generateSprites();
 
 		// play sound to start off the game
@@ -94,8 +95,8 @@ public class SamfNinja extends ApplicationAdapter {
 	}
 
 	private void checkHitboxes(Touch touch) {
-		int beerWidth = 50;
-		int beerHeight = 100;
+		int beerWidth = 65;
+		int beerHeight = 200;
 
 		for (Bottle beerBottle : beerBottles) {
 			float minX = beerBottle.getXOffset(timer);
@@ -105,7 +106,7 @@ public class SamfNinja extends ApplicationAdapter {
 
 			if (minX <= touch.x && touch.x <= maxX) {
 				if (minY <= touch.y && touch.y <= maxY) {
-					generatedSprites.caughtBottle(beerBottle.bottleId);
+					generatedSprites.caughtBottle(beerBottle.bottleId, minX);
 				}
 			}
 		}

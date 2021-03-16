@@ -1,14 +1,17 @@
 package com.mygdx.beerninja;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.audio.Sound;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class GeneratedBeerData {
     List<List<Integer>> data;
     Integer size;
-    Socket socket;
+    BeerSocket socket;
 
-    public GeneratedBeerData(List<List<Integer>> input, Socket inputSocket) {
+    public GeneratedBeerData(List<List<Integer>> input, BeerSocket inputSocket) {
         data = input;
         size = input.size();
         socket = inputSocket;
@@ -34,7 +37,7 @@ public class GeneratedBeerData {
         return bottles;
     }
 
-    public void caughtBottle(int id) {
+    public void caughtBottle(int id, float xPos) {
         List<Integer> slicedBeer = null;
         
         for (List<Integer> spriteData : data) {
@@ -44,7 +47,10 @@ public class GeneratedBeerData {
             }
         }
 
-        socket.caughtBottle(id);
+        Sound beerPop = Gdx.audio.newSound(Gdx.files.internal("break.mp3"));
+        beerPop.play();
+
+        socket.caughtBottle(id, xPos);
         data.remove(slicedBeer);
     }
 }
