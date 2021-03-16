@@ -1,4 +1,7 @@
-const { generateListOfBeerObjects } = require("./eval-functions");
+const {
+  generateListOfBeerObjects,
+  chooseWinningPlayer,
+} = require("./eval-functions");
 const app = require("express")();
 const httpServer = require("http").createServer(app);
 const options = {
