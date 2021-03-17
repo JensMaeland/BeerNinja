@@ -7,9 +7,7 @@ import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 
 public class SamfNinja extends ApplicationAdapter {
 	SpriteBatch beerDrawer;
@@ -63,7 +61,8 @@ public class SamfNinja extends ApplicationAdapter {
 				renderBeerSprites();
 				renderUserTouches();
 				socket.getPoints();
-				// System.out.println(socket.points);
+				System.out.println("Current points:" + socket.myPoints);
+				System.out.println("Enemy points:" + socket.enemyPoints);
 			}
 			else {
 				gameOver();

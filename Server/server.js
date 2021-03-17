@@ -28,17 +28,27 @@ httpServer.listen(8080, () => {
 
 io.on("connection", (socket) => {
   addPlayer(socket, testmode);
-  setScore(socket.id, 5);
-  console.log(getPlayers());
+  setScore(getPlayers().player1.playerID, 5);
+  setScore(getPlayers().player2.playerID, 8);
 
   socket.emit("socketID", { id: socket.id });
 
   socket.on(
     "setUpGame",
-    () =>
-      getPlayers().player1 &&
-      getPlayers().player2 &&
-      socket.emit("setUpGame", { id: socket.id })
+    () => {
+      const tempPlayers = getPlayers();
+      if (tempPlayers.player1 && tempPlayers.player2) {
+        const player1ID = tempPlayers.player1.playerID;
+        const player2ID = tempPlayers.player2.playerID;
+
+        if (socket.id === player1ID) {
+          socket.emit("setUpGame", { playerId: player1ID, enemyId: player2ID })
+        }
+        else if (socket.id === player2ID) {
+          socket.emit("setUpGame", { playerId: player2ID, enemyId: player1ID })
+        }
+      }
+    }
   );
 
   socket.on("bottleList", () =>
@@ -56,9 +66,8 @@ io.on("connection", (socket) => {
 
     const player1Score = tempPlayers.player1.score;
     const player2Score = tempPlayers.player2.score;
-    socket.emit("getPoints", {
-      players: { [player1ID]: player1Score, [player2ID]: player2Score },
-    });
+
+    socket.emit("getPoints", { [player1ID]: player1Score, [player2ID]: player2Score });
   });
 
   socket.on("disconnect", function (socket) {

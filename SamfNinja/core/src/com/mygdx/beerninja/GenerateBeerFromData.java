@@ -25,10 +25,10 @@ public class GenerateBeerFromData {
                     int bottleId = (int) spriteData.get("id");
                     double beerSpawnTime = (double) spriteData.get("secondsToSpawn");
                     int yPos = (int) spriteData.get("offsetY");
-                    String beerPlayer = (String) spriteData.get("player");
+                    String beerPlayer = (String) spriteData.get("playerID");
                     int bottleVelocity = (int) spriteData.get("velocity");
 
-                    Bottle bottle = new Bottle(bottleId, beerPlayer, yPos, bottleVelocity, beerSpawnTime, Gdx.graphics.getHeight(), inputSocket.player);
+                    Bottle bottle = new Bottle(bottleId, beerPlayer, yPos, bottleVelocity, beerSpawnTime, Gdx.graphics.getHeight(), inputSocket.playerId);
                     inputBottles.add(bottle);
                 }
             } catch (JSONException e) {
