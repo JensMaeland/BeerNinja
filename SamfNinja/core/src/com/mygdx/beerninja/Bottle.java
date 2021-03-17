@@ -56,13 +56,13 @@ public class Bottle extends ApplicationAdapter {
             if (!collision) {
                return xStartPos + offset*bottleVelocity;
             }
-            return xStartPos + offset*200;
+            return xStartPos + offset*50;
         }
         else {
             if (!collision) {
                 return xStartPos - offset*bottleVelocity;
             }
-            return xStartPos - offset*200;
+            return xStartPos - offset*50;
         }
     }
 

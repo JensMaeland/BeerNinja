@@ -9,7 +9,6 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -124,6 +123,10 @@ public class SamfNinja extends ApplicationAdapter {
 		});
 	}
 
+	private void renderPlayerScores() {
+
+	}
+
 	private void renderBeerSprites() {
 		List<Bottle> beerBottles = generatedSprites.spawn(gameTimer);
 
@@ -148,7 +151,7 @@ public class SamfNinja extends ApplicationAdapter {
 			TextureRegion region = new TextureRegion(beerBottle.beerTexture);
 
 			beerDrawer.begin();
-			beerDrawer.draw(region, (float) minX, (float) minX,  (float) beerWidth/2,  (float) beerHeight/2, beerWidth, beerHeight, 1, 1, (float) beerBottle.getSpin(gameTimer));
+			beerDrawer.draw(region, (float) minX, (float) minY,  (float) beerWidth/2,  (float) beerHeight/2, beerWidth, beerHeight, 1, 1, (float) beerBottle.getSpin(gameTimer));
 			beerDrawer.end();
 		}
 	}

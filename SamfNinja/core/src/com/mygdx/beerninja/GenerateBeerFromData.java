@@ -28,8 +28,7 @@ public class GenerateBeerFromData {
                     String beerPlayer = (String) spriteData.get("playerID");
                     int bottleVelocity = (int) spriteData.get("velocity");
                     double bottleSpin = (double) spriteData.get("spin");
-
-                    Bottle bottle = new Bottle(bottleId, beerPlayer, yPos, bottleVelocity, bottleSpin, beerSpawnTime, Gdx.graphics.getHeight(), inputSocket.playerId);
+                    Bottle bottle = new Bottle(bottleId, beerPlayer, yPos, bottleVelocity, bottleSpin, beerSpawnTime, Gdx.graphics.getHeight(), inputSocket.playerID);
                     inputBottles.add(bottle);
                 }
             } catch (JSONException e) {
@@ -61,10 +60,12 @@ public class GenerateBeerFromData {
     }
 
     public void caughtBottle(int id, double xPos) {
+        float timestamp = System.currentTimeMillis();
         for (Bottle bottle : bottles) {
             if (bottle.bottleId == id) {
                 bottles.remove(bottle);
-                socket.caughtBottle(id, xPos);
+                CaughtBottle caughtBottle = new CaughtBottle(id, timestamp, xPos, bottle.playerString);
+                socket.sendCaughtBottle(caughtBottle);
                 break;
             }
         }
