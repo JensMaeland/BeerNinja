@@ -6,21 +6,21 @@ import com.badlogic.gdx.graphics.Texture;
 public class Bottle extends ApplicationAdapter {
     Texture beerTexture;
     Integer bottleId;
-    float beerSpawnTime;
+    double beerSpawnTime;
     String playerString;
     String myPlayerString;
-    Integer xPos;
-    Integer yPos;
+    Integer xStartPos;
+    Integer yStartPos;
     Integer bottleVelocity;
     final int screenWidth = 500;
 
-    public Bottle(int id, String bottlePlayer, int y, int velocity, float spawnTime, int screenHeight, String myPlayer) {
+    public Bottle(int id, String bottlePlayer, int y, int velocity, Double spawnTime, int screenHeight, String myPlayer) {
         bottleId = id;
         playerString = bottlePlayer;
         beerTexture = getTexture(bottlePlayer, myPlayer);
         beerSpawnTime = spawnTime;
-        xPos = getXPos(bottlePlayer, myPlayer);
-        yPos = screenHeight - y;
+        xStartPos = getXPos(bottlePlayer, myPlayer);
+        yStartPos = screenHeight - y;
         bottleVelocity = velocity;
         myPlayerString = myPlayer;
     }
@@ -30,7 +30,7 @@ public class Bottle extends ApplicationAdapter {
             return new Texture("pils.png");
         }
         else {
-            return new Texture("fatol.png");
+            return new Texture("dag.png");
         }
     }
 
@@ -38,27 +38,26 @@ public class Bottle extends ApplicationAdapter {
         int margin = 80;
 
         if (player.equals(me)) {
-            return 0 - margin;
+            return -margin;
         }
         else {
             return screenWidth + margin;
         }
     }
 
-    public float getXOffset(float gameTime) {
-        float offset = gameTime - beerSpawnTime;
+    public double getXOffset(Double gameTime) {
+        double offset = gameTime - beerSpawnTime;
 
         if (playerString.equals(myPlayerString)) {
-            return xPos + offset*bottleVelocity;
+            return xStartPos + offset*bottleVelocity;
         }
         else {
-            return xPos - offset*bottleVelocity;
+            return xStartPos - offset*bottleVelocity;
         }
     }
 
-    public float getYOffset(float gameTime) {
-        float offset = (gameTime - beerSpawnTime)/2;
-
-        return yPos - offset*bottleVelocity;
+    public double getYOffset(Double gameTime) {
+        double offset = (gameTime - beerSpawnTime)/2;
+        return yStartPos - offset*bottleVelocity;
     }
 }

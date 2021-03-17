@@ -5,36 +5,50 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.List;
 import io.socket.client.IO;
 import io.socket.client.Socket;
 import io.socket.emitter.Emitter;
-import jdk.nashorn.api.scripting.JSObject;
-import jdk.nashorn.internal.parser.JSONParser;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class BeerSocket {
     String player;
+    int points;
     private Socket socket;
     JSONArray data;
+    String socketUrl = "http://localhost:8080";
 
-    public void connect() {
+    public BeerSocket() {
         try {
-            socket = IO.socket("http://localhost:8080");
-            socket.connect();
+            socket = IO.socket(socketUrl).connect();
         } catch(Exception e) {
             System.out.println(e);
         }
     }
 
-    public String getPlayer() {
-        return player;
+    public void setUpGame() {
+        socket.emit("setUpGame");
+        socket.on("setUpGame", new Emitter.Listener() {
+            @Override
+            public void call(Object... args) {
+                JSONObject receivedData = (JSONObject) args[0];
+                try {
+                    player = receivedData.getString("id");
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
     }
 
-    public GeneratedBeerData generateSprites() {
+    public GenerateBeerFromData generateSprites() {
+        socket.emit("bottleList");
         socket.on("bottleList", new Emitter.Listener() {
             @Override
             public void call(Object... args) {
                 JSONObject receivedData = (JSONObject) args[0];
+
                 try {
                     data = (JSONArray) receivedData.get("bottleList");
                 } catch (JSONException e) {
@@ -44,18 +58,14 @@ public class BeerSocket {
         });
 
         try {
-            Thread.sleep(1000);
-            System.out.println(data);
+            Thread.sleep(500);
 
             ArrayList<JSONObject> result = new ArrayList<>();
-            if (data != null) {
-                for (int i=0;i<data.length();i++){
-                    result.add((JSONObject) data.get(i));
-                }
+            for (int i=0; i<data.length(); i++){
+                result.add((JSONObject) data.get(i));
             }
 
-            System.out.println(result);
-            return new GeneratedBeerData(result, this);
+            return new GenerateBeerFromData(result, this);
         } catch (InterruptedException | JSONException e) {
             e.printStackTrace();
         }
@@ -63,9 +73,35 @@ public class BeerSocket {
         return null;
     }
 
-    public boolean caughtBottle(int id, float xPos) {
-        // send bottle id, player, current time and x-coordinates
-        return false;
+    public void caughtBottle(int id, double xPos) {
+        float timestamp = System.currentTimeMillis();
+        CaughtBottle bottle = new CaughtBottle(id, timestamp, xPos, player);
+
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            String json = mapper.writeValueAsString(bottle);
+            socket.emit("caughtBottle", json);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
     }
 
+    public void getPoints() {
+        socket.on("getPoints", new Emitter.Listener() {
+            @Override
+            public void call(Object... args) {
+                JSONObject receivedData = (JSONObject) args[0];
+                try {
+                    points = (int) receivedData.getInt("points");
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+    }
+
+    public boolean gameSummary() {
+
+        return false;
+    }
 }

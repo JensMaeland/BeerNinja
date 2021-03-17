@@ -3,7 +3,19 @@ const players = require("./server");
 
 class Player {
   playerID = "";
+  score = 0;
   bottles = [];
+}
+
+class Beer {
+  //   int,     float,        int,      string, int
+  constructor(id, secondsToSpawn, offsetY, player, velocity) {
+    this.id = id;
+    this.secondsToSpawn = secondsToSpawn;
+    this.offsetY = offsetY;
+    this.player = player;
+    this.velocity = velocity;
+  }
 }
 
 const createInitialPlayerState = () => {
@@ -17,41 +29,25 @@ const createInitialPlayerState = () => {
   return players;
 };
 
-class Beer {
-  //   int,     float,        int,      string, int
-  constructor(id, secondsToSpawn, offsetY, player, velocity) {
-    this.id = id;
-    this.secondsToSpawn = secondsToSpawn;
-    this.offsetY = offsetY;
-    this.player = player;
-    this.velocity = velocity;
-  }
-}
-
-const generateListOfBeerObjects = (numberOfBeerObjects) => {
+const generateListOfBeerObjects = (numberOfBeerObjects, players) => {
   var spriteList = new Array(numberOfBeerObjects);
-  let playerNumber = 0;
   var playerOne = Math.floor(numberOfBeerObjects / 2);
-  var playerTwo = playerOne;
+  console.log("Generating bottles..");
 
   for (i = 0; i < numberOfBeerObjects; i++) {
     if (Math.random() > 0.5 && playerOne >= 1) {
-      playerNumber = 0;
+      playerID = players[0];
       playerOne--;
-    } else if (playerTwo >= 1) {
-      playerNumber = 1;
-      playerTwo--;
     } else {
-      playerNumber = 0;
-      playerOne--;
+      playerID = players[1];
     }
-    //playerID = players[playerNumber];
-    playerID = playerNumber;
+
+    playerID;
     spriteList[i] = new Beer(
       // id
       i,
       // seconds to spawn
-      Math.round((i + Math.random()) * 100) / 100,
+      Math.round((i + Math.random()) * 10000) / 10000,
       //offset Y(from top)
       100 + Math.floor(Math.random() * 800),
       //Player
@@ -80,7 +76,6 @@ const generateListOfBeerObjects = (numberOfBeerObjects) => {
     */
   }
 
-  console.log(spriteList);
   return spriteList;
 };
 
@@ -91,10 +86,11 @@ Denne funksjonen tar inn en flaske. Den sjekker deretter om flasken den fikk inn
 Dersom flasken eksisterer i motstanderens liste over flasker, betyr dette at motstanderen allerede har fått poeng for denne.
 Dermed fjernes flasken fra motstanders liste, og funksjonen returnerer playerID til vinneren.
 
-Dersom flasken ikke eksisterer i motstanderens liste over flasker, legges flasken til i spillerens liste over flasker, og 
-
+Dersom flasken ikke eksisterer i motstanderens liste over flasker, legges flasken til i spillerens liste over flasker, og ingenting skjer
+Problemet med dette er at det ikke vil bli noen som helst vinner dersom første spiller plukker opp flasken, men spiller 2 ikke tar flasken.
+Denne ble laget mtp gamemode hvor begge spiller om samme flaske.
 */
-const chooseWinningPlayer = (bottle) => {
+const getWinningPlayerV1 = (bottle) => {
   if (bottle.playerID == players.player1.playerID) {
     for (i = 0; i > players.player2.bottles.length; i++) {
       if (bottle.playerID == players.player2.bottles[i]) {
@@ -112,6 +108,22 @@ const chooseWinningPlayer = (bottle) => {
       }
     }
   }
+};
+
+/*
+Funksjonen tar inn en flaske, og returnerer spilleren som skal få et poeng. 
+
+ */
+const getWinningPlayerV2 = (bottle) => {
+  if (bottle.playerID == players.player1.playerID) {
+    return players.player1.playerID;
+  } else if (bottle.playerID == players.player2.playerID) {
+    return players.player2.playerID;
+  }
+};
+
+const allocatePoints = (player, points) => {
+  player.points += points;
 };
 
 const pushBottleToCorrectPlayer = (bottle) => {
@@ -132,8 +144,10 @@ const addPlayer = (socket) => {
 
 module.exports = {
   generateListOfBeerObjects,
-  chooseWinningPlayer,
+  getWinningPlayerV1,
+  getWinningPlayerV2,
   addPlayer,
   createInitialPlayerState,
   pushBottleToCorrectPlayer,
+  allocatePoints,
 };

@@ -1,7 +1,9 @@
 const {
   generateListOfBeerObjects,
-  chooseWinningPlayer,
+  getWinningPlayerV1,
+  getWinningPlayerV2,
   addPlayer,
+  allocatePoints,
   createInitialPlayerState,
   pushBottleToCorrectPlayer,
 } = require("./eval-functions");
@@ -15,8 +17,6 @@ const io = require("socket.io")(httpServer, options);
 
 const players = createInitialPlayerState();
 
-console.log(players);
-
 /*Server now listens to port 8080*/
 httpServer.listen(8080, () => {
   console.log("server is now running");
@@ -28,23 +28,29 @@ io.on("connection", (socket) => {
 
   socket.emit("socketID", { id: socket.id });
 
-  socket.emit("bottleList", {
-    bottleList: generateListOfBeerObjects(30),
-  });
+  socket.on(
+    "setUpGame",
+    () => players.length === 2 && socket.emit("setUpGame", { id: socket.id })
+  );
+
+  socket.on("bottleList", () =>
+    socket.emit("bottleList", {
+      bottleList: generateListOfBeerObjects(30, players),
+    })
+  );
 
   socket.on("caughtBottle", (bottle) => {
-    if (bottle.id == players.player1) {
-    } else {
-    }
+    var winner = getWinningPlayerV2(bottle);
+    allocatePoints(winner);
+    socket.emit("bottleWinner", {
+      winningBottle: bottle,
+      winningPlayer: winner,
+      players: players,
+    });
   });
 
   socket.on("disconnect", function () {
+    players = ["2player"];
     console.log("Player Disconnected");
   });
 });
-
-const findMatchingBottles = (red, blue) => {
-  for (i = 0; i < len(red); i++) {}
-};
-
-module.exports = players;
