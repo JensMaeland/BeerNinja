@@ -1,3 +1,5 @@
+const { json } = require("express");
+
 //(numberOfSprites wants to spawn, id of player)
 class Player {
   playerID = "";
@@ -82,9 +84,10 @@ Funksjonen tar inn en flaske, og returnerer spilleren som skal få et poeng.
 
  */
 const getWinningPlayerV2 = (bottle) => {
-  if (bottle.playerID == players.player1.playerID) {
+  jsonBottle = JSON.parse(bottle);
+  if (jsonBottle.playerID == players.player1.playerID) {
     return players.player1.playerID;
-  } else if (bottle.playerID == players.player2.playerID) {
+  } else if (jsonBottle.playerID == players.player2.playerID) {
     return players.player2.playerID;
   }
 };

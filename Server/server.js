@@ -28,28 +28,22 @@ httpServer.listen(8080, () => {
 
 io.on("connection", (socket) => {
   addPlayer(socket, testmode);
-  setScore(getPlayers().player1.playerID, 5);
-  setScore(getPlayers().player2.playerID, 8);
 
   socket.emit("socketID", { id: socket.id });
 
-  socket.on(
-    "setUpGame",
-    () => {
-      const tempPlayers = getPlayers();
-      if (tempPlayers.player1 && tempPlayers.player2) {
-        const player1ID = tempPlayers.player1.playerID;
-        const player2ID = tempPlayers.player2.playerID;
+  socket.on("setUpGame", () => {
+    const tempPlayers = getPlayers();
+    if (tempPlayers.player1 && tempPlayers.player2) {
+      const player1ID = tempPlayers.player1.playerID;
+      const player2ID = tempPlayers.player2.playerID;
 
-        if (socket.id === player1ID) {
-          socket.emit("setUpGame", { playerId: player1ID, enemyId: player2ID })
-        }
-        else if (socket.id === player2ID) {
-          socket.emit("setUpGame", { playerId: player2ID, enemyId: player1ID })
-        }
+      if (socket.id === player1ID) {
+        socket.emit("setUpGame", { playerID: player1ID, enemyID: player2ID });
+      } else if (socket.id === player2ID) {
+        socket.emit("setUpGame", { playerID: player2ID, enemyID: player1ID });
       }
     }
-  );
+  });
 
   socket.on("bottleList", () =>
     socket.emit("bottleList", {
@@ -59,6 +53,7 @@ io.on("connection", (socket) => {
 
   socket.on("caughtBottle", (bottle) => {
     var winner = getWinningPlayerV2(bottle);
+    console.log(winner);
     setScore(winner, 1);
     const tempPlayers = getPlayers();
     const player1ID = tempPlayers.player1.playerID;
@@ -67,7 +62,10 @@ io.on("connection", (socket) => {
     const player1Score = tempPlayers.player1.score;
     const player2Score = tempPlayers.player2.score;
 
-    socket.emit("getPoints", { [player1ID]: player1Score, [player2ID]: player2Score });
+    socket.emit("getPoints", {
+      [player1ID]: player1Score,
+      [player2ID]: player2Score,
+    });
   });
 
   socket.on("disconnect", function (socket) {
