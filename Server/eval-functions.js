@@ -29,20 +29,22 @@ const createInitialPlayerState = () => {
   };
 };
 
-const generateListOfBeerObjects = (numberOfBeerObjects) => {
+const generateListOfBeerObjects = (numberOfBeerObjects, isSinglePlayer) => {
   var spriteList = new Array(numberOfBeerObjects);
   var playerOne = Math.floor(numberOfBeerObjects / 2);
   console.log("Generating bottles..");
 
   for (i = 0; i < numberOfBeerObjects; i++) {
-    if (Math.random() > 0.5 && playerOne >= 1) {
+    if (isSinglePlayer) {
+      playerID = players.player1.playerID;
+    } else if (Math.random() > 0.5 && playerOne >= 1) {
       playerID = players.player1.playerID;
       playerOne--;
     } else {
       playerID = players.player2.playerID;
     }
 
-    playerID;
+    //Creates new beer object
     spriteList[i] = new Beer(
       // id
       i,
@@ -58,6 +60,8 @@ const generateListOfBeerObjects = (numberOfBeerObjects) => {
     /*
     beerList.push();
 
+    
+
     //id
     sprite.push(i);
 
@@ -70,7 +74,7 @@ const generateListOfBeerObjects = (numberOfBeerObjects) => {
     //player
     sprite.push(playerID);
 
-    //sprite velocity
+    //sprite velocity 
     sprite.push(150 + Math.floor(Math.random() * 250));
     spriteList.push(sprite);
     */
@@ -79,51 +83,20 @@ const generateListOfBeerObjects = (numberOfBeerObjects) => {
   return spriteList;
 };
 
-const addBeerToQueue = (beer) => { };
-
-/*
-Denne funksjonen tar inn en flaske. Den sjekker deretter om flasken den fikk inn, eksisterer i motstanderens liste over flasker.
-Dersom flasken eksisterer i motstanderens liste over flasker, betyr dette at motstanderen allerede har fått poeng for denne.
-Dermed fjernes flasken fra motstanders liste, og funksjonen returnerer playerID til vinneren.
-
-Dersom flasken ikke eksisterer i motstanderens liste over flasker, legges flasken til i spillerens liste over flasker, og ingenting skjer
-Problemet med dette er at det ikke vil bli noen som helst vinner dersom første spiller plukker opp flasken, men spiller 2 ikke tar flasken.
-Denne ble laget mtp gamemode hvor begge spiller om samme flaske.
-*/
-const getWinningPlayerV1 = (bottle) => {
-  if (bottle.playerID == players.player1.playerID) {
-    for (i = 0; i > players.player2.bottles.length; i++) {
-      if (bottle.playerID == players.player2.bottles[i]) {
-        const index = players.player2.bottles.indexOf(bottle);
-        players.player2.bottles.splice(index, 1);
-        return players.player2.playerID;
-      }
-    }
-  } else if (bottle.playerID == players.player2.playerID) {
-    for (i = 0; i > players.player1.bottles.length; i++) {
-      if (bottle.playerID == players.player1.bottles[i]) {
-        const index = players.player1.bottles.indexOf(bottle);
-        players.player1.bottles.splice(index, 1);
-        return players.player1.playerID;
-      }
-    }
-  }
-};
-
 /*
 Funksjonen tar inn en flaske, og returnerer spilleren som skal få et poeng. 
 
  */
 const getWinningPlayerV2 = (bottle) => {
   if (bottle.playerID == players.player1.playerID) {
-    return players.player1.playerID;
+    return players.player1;
   } else if (bottle.playerID == players.player2.playerID) {
-    return players.player2.playerID;
+    return players.player2;
   }
 };
 
 const allocatePoints = (player, points) => {
-  player.points += points;
+  player.score += points;
 };
 
 const pushBottleToCorrectPlayer = (bottle) => {
@@ -142,8 +115,7 @@ const addPlayer = (socket, testMode = false) => {
   if (!players.player1.playerID) {
     players.player1.playerID = socket.id;
 
-    if (testMode) players.player2.playerID = 'testplayer_2';
-
+    if (testMode) players.player2.playerID = "testplayer_2";
   } else if (!players.player2.playerID) {
     players.player2.playerID = socket.id;
   }
@@ -151,11 +123,10 @@ const addPlayer = (socket, testMode = false) => {
 
 module.exports = {
   generateListOfBeerObjects,
-  getWinningPlayerV1,
   getWinningPlayerV2,
   addPlayer,
   createInitialPlayerState,
   pushBottleToCorrectPlayer,
   allocatePoints,
-  getPlayers
+  getPlayers,
 };
