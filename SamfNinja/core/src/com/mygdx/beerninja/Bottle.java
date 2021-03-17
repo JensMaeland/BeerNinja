@@ -12,9 +12,11 @@ public class Bottle extends ApplicationAdapter {
     Integer xStartPos;
     Integer yStartPos;
     Integer bottleVelocity;
+    double bottleSpin;
+    boolean collision;
     final int screenWidth = 500;
 
-    public Bottle(int id, String bottlePlayer, int y, int velocity, Double spawnTime, int screenHeight, String myPlayer) {
+    public Bottle(int id, String bottlePlayer, int y, int velocity, double spin, double spawnTime, int screenHeight, String myPlayer) {
         bottleId = id;
         playerString = bottlePlayer;
         beerTexture = getTexture(bottlePlayer, myPlayer);
@@ -22,6 +24,8 @@ public class Bottle extends ApplicationAdapter {
         xStartPos = getXPos(bottlePlayer, myPlayer);
         yStartPos = screenHeight - y;
         bottleVelocity = velocity;
+        bottleSpin = spin;
+        collision = false;
         myPlayerString = myPlayer;
     }
 
@@ -49,10 +53,33 @@ public class Bottle extends ApplicationAdapter {
         double offset = gameTime - beerSpawnTime;
 
         if (playerString.equals(myPlayerString)) {
-            return xStartPos + offset*bottleVelocity;
+            if (!collision) {
+               return xStartPos + offset*bottleVelocity;
+            }
+            return xStartPos + offset*200;
         }
         else {
-            return xStartPos - offset*bottleVelocity;
+            if (!collision) {
+                return xStartPos - offset*bottleVelocity;
+            }
+            return xStartPos - offset*200;
+        }
+    }
+
+    public double getSpin(Double gameTime) {
+        double offset = gameTime - beerSpawnTime;
+
+        if (playerString.equals(myPlayerString)) {
+            if (!collision) {
+                return -offset*bottleSpin*200;
+            }
+            return bottleSpin*50;
+        }
+        else {
+            if (!collision) {
+                return offset*bottleSpin*200;
+            }
+            return -bottleSpin*50;
         }
     }
 

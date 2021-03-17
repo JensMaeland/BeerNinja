@@ -27,8 +27,8 @@ public class GenerateBeerFromData {
                     int yPos = (int) spriteData.get("offsetY");
                     String beerPlayer = (String) spriteData.get("playerID");
                     int bottleVelocity = (int) spriteData.get("velocity");
-
-                    Bottle bottle = new Bottle(bottleId, beerPlayer, yPos, bottleVelocity, beerSpawnTime, Gdx.graphics.getHeight(), inputSocket.playerID);
+                    double bottleSpin = (double) spriteData.get("spin");
+                    Bottle bottle = new Bottle(bottleId, beerPlayer, yPos, bottleVelocity, bottleSpin, beerSpawnTime, Gdx.graphics.getHeight(), inputSocket.playerID);
                     inputBottles.add(bottle);
                 }
             } catch (JSONException e) {
@@ -44,7 +44,7 @@ public class GenerateBeerFromData {
         for (Bottle bottle : bottles) {
             double beerSpawnTime = bottle.beerSpawnTime;
 
-            if(gameTime > beerSpawnTime && gameTime < beerSpawnTime + 5) {
+            if(gameTime > beerSpawnTime && gameTime < beerSpawnTime + 10) {
                 currentBottles.add(bottle);
             }
         }
