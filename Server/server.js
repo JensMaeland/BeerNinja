@@ -6,6 +6,7 @@ const {
   createInitialPlayerState,
   pushBottleToCorrectPlayer,
   getPlayers,
+  setScore,
 } = require("./eval-functions");
 
 const app = require("express")();
@@ -27,6 +28,8 @@ httpServer.listen(8080, () => {
 
 io.on("connection", (socket) => {
   addPlayer(socket, testmode);
+  setScore(socket.id, 5);
+  console.log(getPlayers());
 
   socket.emit("socketID", { id: socket.id });
 
@@ -46,9 +49,15 @@ io.on("connection", (socket) => {
 
   socket.on("caughtBottle", (bottle) => {
     var winner = getWinningPlayerV2(bottle);
-    allocatePoints(winner);
+    setScore(winner, 1);
+    const tempPlayers = getPlayers();
+    const player1ID = tempPlayers.player1.playerID;
+    const player2ID = tempPlayers.player2.playerID;
+
+    const player1Score = tempPlayers.player1.score;
+    const player2Score = tempPlayers.player2.score;
     socket.emit("getPoints", {
-      players: getPlayers(),
+      players: { [player1ID]: player1Score, [player2ID]: player2Score },
     });
   });
 

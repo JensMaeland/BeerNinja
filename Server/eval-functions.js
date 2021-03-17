@@ -6,19 +6,28 @@ class Player {
 }
 
 class Beer {
-  //   int,     float,        int,      string, int
-  constructor(id, secondsToSpawn, offsetY, player, velocity) {
+  //   int,     float,        int,      string,       int, float
+  constructor(id, secondsToSpawn, offsetY, playerID, velocity, spin) {
     this.id = id;
     this.secondsToSpawn = secondsToSpawn;
     this.offsetY = offsetY;
-    this.player = player;
+    this.playerID = playerID;
     this.velocity = velocity;
+    this.spin = spin;
   }
 }
 
 let players = {};
 
 const getPlayers = () => players;
+
+const setScore = (playerID, score) => {
+  if (players.player1.playerID == playerID) {
+    players.player1.score += score;
+  } else if (players.player2.playerID == playerID) {
+    players.player2.score += score;
+  }
+};
 
 const createInitialPlayerState = () => {
   const player1 = new Player();
@@ -29,7 +38,12 @@ const createInitialPlayerState = () => {
   };
 };
 
-const generateListOfBeerObjects = (numberOfBeerObjects, isSinglePlayer) => {
+const generateListOfBeerObjects = (
+  numberOfBeerObjects,
+  isSinglePlayer,
+  standardOffsetY = 800,
+  standardVelocity = 350
+) => {
   var spriteList = new Array(numberOfBeerObjects);
   var playerOne = Math.floor(numberOfBeerObjects / 2);
   console.log("Generating bottles..");
@@ -51,33 +65,13 @@ const generateListOfBeerObjects = (numberOfBeerObjects, isSinglePlayer) => {
       // seconds to spawn
       Math.round((i + Math.random()) * 10000) / 10000,
       //offset Y(from top)
-      100 + Math.floor(Math.random() * 800),
+      100 + Math.floor(Math.random() * standardOffsetY),
       //Player
       playerID,
       //Sprite Velocity
-      150 + Math.floor(Math.random() * 250)
+      standardVelocity + Math.floor(Math.random() * 250),
+      Math.PI * Math.random()
     );
-    /*
-    beerList.push();
-
-    
-
-    //id
-    sprite.push(i);
-
-    //seconds to spawn
-    sprite.push(Math.round((i + Math.random()) * 100) / 100);
-
-    //offset Y(from top)
-    sprite.push(100 + Math.floor(Math.random() * 800));
-
-    //player
-    sprite.push(playerID);
-
-    //sprite velocity 
-    sprite.push(150 + Math.floor(Math.random() * 250));
-    spriteList.push(sprite);
-    */
   }
 
   return spriteList;
@@ -89,14 +83,10 @@ Funksjonen tar inn en flaske, og returnerer spilleren som skal få et poeng.
  */
 const getWinningPlayerV2 = (bottle) => {
   if (bottle.playerID == players.player1.playerID) {
-    return players.player1;
+    return players.player1.playerID;
   } else if (bottle.playerID == players.player2.playerID) {
-    return players.player2;
+    return players.player2.playerID;
   }
-};
-
-const allocatePoints = (player, points) => {
-  player.score += points;
 };
 
 const pushBottleToCorrectPlayer = (bottle) => {
@@ -127,6 +117,6 @@ module.exports = {
   addPlayer,
   createInitialPlayerState,
   pushBottleToCorrectPlayer,
-  allocatePoints,
   getPlayers,
+  setScore,
 };
