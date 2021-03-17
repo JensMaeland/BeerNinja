@@ -38,8 +38,8 @@ public class BeerSocket {
             public void call(Object... args) {
                 JSONObject receivedData = (JSONObject) args[0];
                 try {
-                    playerId = receivedData.getString("playerId");
-                    enemyId = receivedData.getString("enemyId");
+                    playerId = receivedData.getString("playerID");
+                    enemyId = receivedData.getString("enemyID");
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
