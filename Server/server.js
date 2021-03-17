@@ -1,7 +1,11 @@
 const {
   generateListOfBeerObjects,
   chooseWinningPlayer,
+  addPlayer,
+  createInitialPlayerState,
+  pushBottleToCorrectPlayer,
 } = require("./eval-functions");
+
 const app = require("express")();
 const httpServer = require("http").createServer(app);
 const options = {
@@ -9,7 +13,9 @@ const options = {
 };
 const io = require("socket.io")(httpServer, options);
 
-const players = [];
+const players = createInitialPlayerState();
+
+console.log(players);
 
 /*Server now listens to port 8080*/
 httpServer.listen(8080, () => {
@@ -17,20 +23,28 @@ httpServer.listen(8080, () => {
 });
 
 io.on("connection", (socket) => {
-  players.push(socket.id);
+  addPlayer(socket);
+  console.log(players);
+
   socket.emit("socketID", { id: socket.id });
 
   socket.emit("bottleList", {
     bottleList: generateListOfBeerObjects(30),
   });
 
-  socket.on("caughtBottle", (bottle) => {});
+  socket.on("caughtBottle", (bottle) => {
+    if (bottle.id == players.player1) {
+    } else {
+    }
+  });
 
   socket.on("disconnect", function () {
     console.log("Player Disconnected");
   });
 });
 
-console.log(generateListOfBeerObjects(30));
+const findMatchingBottles = (red, blue) => {
+  for (i = 0; i < len(red); i++) {}
+};
 
 module.exports = players;

@@ -1,6 +1,22 @@
 //(numberOfSprites wants to spawn, id of player)
 const players = require("./server");
 
+class Player {
+  playerID = "";
+  bottles = [];
+}
+
+const createInitialPlayerState = () => {
+  const player1 = new Player();
+  const player2 = new Player();
+  const players = {
+    player1,
+    player2,
+  };
+
+  return players;
+};
+
 class Beer {
   //   int,     float,        int,      string, int
   constructor(id, secondsToSpawn, offsetY, player, velocity) {
@@ -70,15 +86,54 @@ const generateListOfBeerObjects = (numberOfBeerObjects) => {
 
 const addBeerToQueue = (beer) => {};
 
-const chooseWinningPlayer = (beer1, beer2) => {
-  if (beer1.x > beer2.x) {
-    return beer2;
-  } else {
-    return beer1;
+/*
+Denne funksjonen tar inn en flaske. Den sjekker deretter om flasken den fikk inn, eksisterer i motstanderens liste over flasker.
+Dersom flasken eksisterer i motstanderens liste over flasker, betyr dette at motstanderen allerede har fått poeng for denne.
+Dermed fjernes flasken fra motstanders liste, og funksjonen returnerer playerID til vinneren.
+
+Dersom flasken ikke eksisterer i motstanderens liste over flasker, legges flasken til i spillerens liste over flasker, og 
+
+*/
+const chooseWinningPlayer = (bottle) => {
+  if (bottle.playerID == players.player1.playerID) {
+    for (i = 0; i > players.player2.bottles.length; i++) {
+      if (bottle.playerID == players.player2.bottles[i]) {
+        const index = players.player2.bottles.indexOf(bottle);
+        players.player2.bottles.splice(index, 1);
+        return players.player2.playerID;
+      }
+    }
+  } else if (bottle.playerID == players.player2.playerID) {
+    for (i = 0; i > players.player1.bottles.length; i++) {
+      if (bottle.playerID == players.player1.bottles[i]) {
+        const index = players.player1.bottles.indexOf(bottle);
+        players.player1.bottles.splice(index, 1);
+        return players.player1.playerID;
+      }
+    }
+  }
+};
+
+const pushBottleToCorrectPlayer = (bottle) => {
+  if (bottle.playerID == players.player1.playerID) {
+    players.player1.bottles.push(bottle);
+  } else if (bottle.playerID == players.player2.playerID) {
+    players.player2.bottles.push(bottle);
+  }
+};
+
+const addPlayer = (socket) => {
+  if (!players.player1.playerID) {
+    players.player1.playerID = socket.id;
+  } else if (!players.player2.playerID) {
+    players.player2.playerID = socket.id;
   }
 };
 
 module.exports = {
   generateListOfBeerObjects,
   chooseWinningPlayer,
+  addPlayer,
+  createInitialPlayerState,
+  pushBottleToCorrectPlayer,
 };
