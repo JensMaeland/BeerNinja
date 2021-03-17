@@ -6,6 +6,7 @@ const {
   allocatePoints,
   createInitialPlayerState,
   pushBottleToCorrectPlayer,
+  getPlayers
 } = require("./eval-functions");
 
 const app = require("express")();
@@ -15,7 +16,8 @@ const options = {
 };
 const io = require("socket.io")(httpServer, options);
 
-const players = createInitialPlayerState();
+// lets user play agains an idle player2
+const testmode = true;
 
 /*Server now listens to port 8080*/
 httpServer.listen(8080, () => {
@@ -23,19 +25,18 @@ httpServer.listen(8080, () => {
 });
 
 io.on("connection", (socket) => {
-  addPlayer(socket);
-  console.log(players);
+  addPlayer(socket, testmode);
 
   socket.emit("socketID", { id: socket.id });
 
   socket.on(
     "setUpGame",
-    () => players.length === 2 && socket.emit("setUpGame", { id: socket.id })
+    () => getPlayers().player1 && getPlayers().player2 && socket.emit("setUpGame", { id: socket.id })
   );
 
   socket.on("bottleList", () =>
     socket.emit("bottleList", {
-      bottleList: generateListOfBeerObjects(30, players),
+      bottleList: generateListOfBeerObjects(30),
     })
   );
 
@@ -45,12 +46,13 @@ io.on("connection", (socket) => {
     socket.emit("bottleWinner", {
       winningBottle: bottle,
       winningPlayer: winner,
-      players: players,
+      players: getPlayers(),
     });
   });
 
-  socket.on("disconnect", function () {
-    players = ["2player"];
+  socket.on("disconnect", function (socket) {
+    createInitialPlayerState();
+
     console.log("Player Disconnected");
   });
 });

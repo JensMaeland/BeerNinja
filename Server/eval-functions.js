@@ -1,6 +1,4 @@
 //(numberOfSprites wants to spawn, id of player)
-const players = require("./server");
-
 class Player {
   playerID = "";
   score = 0;
@@ -18,28 +16,30 @@ class Beer {
   }
 }
 
+let players = {};
+
+const getPlayers = () => players;
+
 const createInitialPlayerState = () => {
   const player1 = new Player();
   const player2 = new Player();
-  const players = {
+  players = {
     player1,
     player2,
   };
-
-  return players;
 };
 
-const generateListOfBeerObjects = (numberOfBeerObjects, players) => {
+const generateListOfBeerObjects = (numberOfBeerObjects) => {
   var spriteList = new Array(numberOfBeerObjects);
   var playerOne = Math.floor(numberOfBeerObjects / 2);
   console.log("Generating bottles..");
 
   for (i = 0; i < numberOfBeerObjects; i++) {
     if (Math.random() > 0.5 && playerOne >= 1) {
-      playerID = players[0];
+      playerID = players.player1.playerID;
       playerOne--;
     } else {
-      playerID = players[1];
+      playerID = players.player2.playerID;
     }
 
     playerID;
@@ -79,7 +79,7 @@ const generateListOfBeerObjects = (numberOfBeerObjects, players) => {
   return spriteList;
 };
 
-const addBeerToQueue = (beer) => {};
+const addBeerToQueue = (beer) => { };
 
 /*
 Denne funksjonen tar inn en flaske. Den sjekker deretter om flasken den fikk inn, eksisterer i motstanderens liste over flasker.
@@ -134,9 +134,16 @@ const pushBottleToCorrectPlayer = (bottle) => {
   }
 };
 
-const addPlayer = (socket) => {
+const addPlayer = (socket, testMode = false) => {
+  if (!players.player1 && !players.player2) {
+    createInitialPlayerState();
+  }
+
   if (!players.player1.playerID) {
     players.player1.playerID = socket.id;
+
+    if (testMode) players.player2.playerID = 'testplayer_2';
+
   } else if (!players.player2.playerID) {
     players.player2.playerID = socket.id;
   }
@@ -150,4 +157,5 @@ module.exports = {
   createInitialPlayerState,
   pushBottleToCorrectPlayer,
   allocatePoints,
+  getPlayers
 };
