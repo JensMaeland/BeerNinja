@@ -5,9 +5,13 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 public class SamfNinja extends ApplicationAdapter {
 	SpriteBatch beerDrawer;
@@ -18,9 +22,12 @@ public class SamfNinja extends ApplicationAdapter {
 	final double gameEndTime = 35;
 	final double powerUpTimer = 20;
 	final int swordLength = 35;
+	final int beerWidth = 65;
+	final int beerHeight = 200;
 	private boolean loading = false;
 	int touchNumber = 0;
 	Texture background;
+	BitmapFont font;
 
 	@Override
 	public void create () {
@@ -28,6 +35,8 @@ public class SamfNinja extends ApplicationAdapter {
 		beerDrawer = new SpriteBatch();
 		// connect the socket and receive generated sprites from the server
 		socket = new BeerSocket();
+
+		font = new BitmapFont();
 
 		// instancing objects for touch feature
 		for (int i = 0; i < swordLength; i++) {
@@ -51,18 +60,19 @@ public class SamfNinja extends ApplicationAdapter {
 			gameTimer += Gdx.graphics.getDeltaTime();
 			
 			if (gameTimer < gameEndTime) {
-				float brightness = (float) Math.max(0.7, (gameTimer - Math.round(gameTimer)) + 0.5);
+				float brightness = (float) Math.max(0.6, (gameTimer - Math.round(gameTimer)) + 0.5);
 				beerDrawer.begin();
 				beerDrawer.setColor(brightness, brightness, 1F, 1F);
 				beerDrawer.draw(background, 0, 0);
 				beerDrawer.setColor(1F, 1F, 1F, 1F);
+
+				font.draw(beerDrawer, Integer.toString(socket.myPoints), 50, Gdx.graphics.getHeight() - 50);
+				font.draw(beerDrawer, Integer.toString(socket.enemyPoints), 490, Gdx.graphics.getHeight() - 50);
 				beerDrawer.end();
 
 				renderBeerSprites();
 				renderUserTouches();
 				socket.getPoints();
-				System.out.println("Current points:" + socket.myPoints);
-				System.out.println("Enemy points:" + socket.enemyPoints);
 			}
 			else {
 				gameOver();
@@ -115,12 +125,30 @@ public class SamfNinja extends ApplicationAdapter {
 	}
 
 	private void renderBeerSprites() {
-		for (Bottle beerBottle : generatedSprites.spawn(gameTimer)) {
-			double x = beerBottle.getXOffset(gameTimer);
-			double y = beerBottle.getYOffset(gameTimer);
+		List<Bottle> beerBottles = generatedSprites.spawn(gameTimer);
+
+		for (Bottle beerBottle : beerBottles) {
+			double minX = beerBottle.getXOffset(gameTimer);
+			double minY = beerBottle.getYOffset(gameTimer);
+
+			for (Bottle compareBottle : beerBottles) {
+				double compareX = compareBottle.getXOffset(gameTimer);
+				double compareY = compareBottle.getYOffset(gameTimer);
+
+				if (beerBottle != compareBottle) {
+					if (minX <= compareX + beerWidth && compareX <= minX + beerWidth) {
+						if (minY <= compareY + beerHeight && compareY <= minY + beerHeight) {
+							beerBottle.xStartPos = (int) minX;
+							beerBottle.collision = true;
+						}
+					}
+				}
+			}
+
+			TextureRegion region = new TextureRegion(beerBottle.beerTexture);
 
 			beerDrawer.begin();
-			beerDrawer.draw(beerBottle.beerTexture, (float) x, (float) y);
+			beerDrawer.draw(region, (float) minX, (float) minX,  (float) beerWidth/2,  (float) beerHeight/2, beerWidth, beerHeight, 1, 1, (float) beerBottle.getSpin(gameTimer));
 			beerDrawer.end();
 		}
 	}
@@ -133,7 +161,7 @@ public class SamfNinja extends ApplicationAdapter {
 				touch.x = screenX;
 				touch.y = Gdx.graphics.getHeight() - screenY;
 				touch.display = true;
-				checkHitboxes(touch);
+				checkTouchHitboxes(touch);
 				touchNumber = (touchNumber + 1) % swordLength;
 				return false;
 			}
@@ -172,10 +200,7 @@ public class SamfNinja extends ApplicationAdapter {
 		}
 	}
 
-	private void checkHitboxes(Touch touch) {
-		int beerWidth = 65;
-		int beerHeight = 200;
-
+	private void checkTouchHitboxes(Touch touch) {
 		for (Bottle beerBottle : generatedSprites.spawn(gameTimer)) {
 			double minX = beerBottle.getXOffset(gameTimer);
 			double minY = beerBottle.getYOffset(gameTimer);
