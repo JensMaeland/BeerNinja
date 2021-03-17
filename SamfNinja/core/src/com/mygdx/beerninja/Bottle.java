@@ -9,8 +9,8 @@ public class Bottle extends ApplicationAdapter {
     double beerSpawnTime;
     String playerString;
     String myPlayerString;
-    Integer xPos;
-    Integer yPos;
+    Integer xStartPos;
+    Integer yStartPos;
     Integer bottleVelocity;
     final int screenWidth = 500;
 
@@ -19,8 +19,8 @@ public class Bottle extends ApplicationAdapter {
         playerString = bottlePlayer;
         beerTexture = getTexture(bottlePlayer, myPlayer);
         beerSpawnTime = spawnTime;
-        xPos = getXPos(bottlePlayer, myPlayer);
-        yPos = screenHeight - y;
+        xStartPos = getXPos(bottlePlayer, myPlayer);
+        yStartPos = screenHeight - y;
         bottleVelocity = velocity;
         myPlayerString = myPlayer;
     }
@@ -38,27 +38,26 @@ public class Bottle extends ApplicationAdapter {
         int margin = 80;
 
         if (player.equals(me)) {
-            return 0 - margin;
+            return -margin;
         }
         else {
             return screenWidth + margin;
         }
     }
 
-    public Double getXOffset(Double gameTime) {
-        Double offset = gameTime - beerSpawnTime;
+    public double getXOffset(Double gameTime) {
+        double offset = gameTime - beerSpawnTime;
 
         if (playerString.equals(myPlayerString)) {
-            return xPos + offset*bottleVelocity;
+            return xStartPos + offset*bottleVelocity;
         }
         else {
-            return xPos - offset*bottleVelocity;
+            return xStartPos - offset*bottleVelocity;
         }
     }
 
-    public Double getYOffset(Double gameTime) {
-        Double offset = (gameTime - beerSpawnTime)/2;
-
-        return yPos - offset*bottleVelocity;
+    public double getYOffset(Double gameTime) {
+        double offset = (gameTime - beerSpawnTime)/2;
+        return yStartPos - offset*bottleVelocity;
     }
 }

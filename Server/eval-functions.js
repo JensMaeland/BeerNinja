@@ -1,6 +1,3 @@
-//(numberOfSprites wants to spawn, id of player)
-const players = require("./server");
-
 class Beer {
   //   int,     float,        int,      string, int
   constructor(id, secondsToSpawn, offsetY, player, velocity) {
@@ -12,30 +9,25 @@ class Beer {
   }
 }
 
-const generateListOfBeerObjects = (numberOfBeerObjects) => {
+const generateListOfBeerObjects = (numberOfBeerObjects, players) => {
   var spriteList = new Array(numberOfBeerObjects);
-  let playerNumber = 0;
   var playerOne = Math.floor(numberOfBeerObjects / 2);
-  var playerTwo = playerOne;
+  console.log("Generating bottles..")
 
   for (i = 0; i < numberOfBeerObjects; i++) {
     if (Math.random() > 0.5 && playerOne >= 1) {
-      playerNumber = "0_player0";
+      playerID = players[0];
       playerOne--;
-    } else if (playerTwo >= 1) {
-      playerNumber = "1_player1";
-      playerTwo--;
     } else {
-      playerNumber = "0_player0";
-      playerOne--;
+      playerID = players[1];
     }
-    //playerID = players[playerNumber];
-    playerID = playerNumber;
+
+    playerID;
     spriteList[i] = new Beer(
       // id
       i,
       // seconds to spawn
-      Math.round((i + Math.random()) * 100) / 100,
+      Math.round((i + Math.random()) * 10000) / 10000,
       //offset Y(from top)
       100 + Math.floor(Math.random() * 800),
       //Player
@@ -64,7 +56,6 @@ const generateListOfBeerObjects = (numberOfBeerObjects) => {
     */
   }
 
-  console.log(spriteList);
   return spriteList;
 };
 
