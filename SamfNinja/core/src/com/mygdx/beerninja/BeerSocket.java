@@ -15,8 +15,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class BeerSocket {
-    String playerId;
-    String enemyId;
+    public String playerID;
+    String enemyID;
     int myPoints;
     int enemyPoints;
     private Socket socket;
@@ -38,8 +38,10 @@ public class BeerSocket {
             public void call(Object... args) {
                 JSONObject receivedData = (JSONObject) args[0];
                 try {
-                    playerId = receivedData.getString("playerId");
-                    enemyId = receivedData.getString("enemyId");
+                    playerID = receivedData.getString("playerID");
+                    enemyID = receivedData.getString("enemyID");
+                    System.out.println(playerID);
+                    System.out.println(enemyID);
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
@@ -80,10 +82,7 @@ public class BeerSocket {
         return null;
     }
 
-    public void caughtBottle(int id, double xPos) {
-        float timestamp = System.currentTimeMillis();
-        CaughtBottle bottle = new CaughtBottle(id, timestamp, xPos, playerId);
-
+    public void sendCaughtBottle(CaughtBottle bottle) {
         ObjectMapper mapper = new ObjectMapper();
         try {
             String json = mapper.writeValueAsString(bottle);
@@ -121,8 +120,8 @@ public class BeerSocket {
 
                 JSONObject receivedData = (JSONObject) args[0];
                 try {
-                    myPoints = receivedData.getInt(playerId);
-                    enemyPoints = receivedData.getInt(enemyId);
+                    myPoints = receivedData.getInt(playerID);
+                    enemyPoints = receivedData.getInt(enemyID);
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }

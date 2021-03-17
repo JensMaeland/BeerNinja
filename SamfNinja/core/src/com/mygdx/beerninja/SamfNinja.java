@@ -114,6 +114,10 @@ public class SamfNinja extends ApplicationAdapter {
 		});
 	}
 
+	private void renderPlayerScores() {
+
+	}
+
 	private void renderBeerSprites() {
 		for (Bottle beerBottle : generatedSprites.spawn(gameTimer)) {
 			double x = beerBottle.getXOffset(gameTimer);
