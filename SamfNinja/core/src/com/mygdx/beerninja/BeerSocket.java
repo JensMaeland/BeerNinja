@@ -5,6 +5,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+
 import io.socket.client.IO;
 import io.socket.client.Socket;
 import io.socket.emitter.Emitter;
@@ -61,8 +63,10 @@ public class BeerSocket {
             Thread.sleep(500);
 
             ArrayList<JSONObject> result = new ArrayList<>();
-            for (int i=0; i<data.length(); i++){
-                result.add((JSONObject) data.get(i));
+            if (data != null) {
+                for (int i=0; i<data.length(); i++){
+                    result.add((JSONObject) data.get(i));
+                }
             }
 
             return new GenerateBeerFromData(result, this);
@@ -84,6 +88,27 @@ public class BeerSocket {
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
+    }
+
+    public void exchangeTouches(HashMap<Integer, Touch> touches) {
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            String json = mapper.writeValueAsString(touches);
+            socket.emit("sendTouches", json);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+        socket.on("getTouches", new Emitter.Listener() {
+            @Override
+            public void call(Object... args) {
+                JSONObject receivedData = (JSONObject) args[0];
+                try {
+                    JSONObject enemyTouches = (JSONObject) receivedData.get("getTouches");
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
     }
 
     public void getPoints() {

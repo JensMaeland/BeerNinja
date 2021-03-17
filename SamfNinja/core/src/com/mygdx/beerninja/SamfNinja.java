@@ -8,16 +8,20 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 public class SamfNinja extends ApplicationAdapter {
 	SpriteBatch beerDrawer;
 	BeerSocket socket;
 	GenerateBeerFromData generatedSprites = null;
-	List<Touch> touches = new ArrayList<>();
+	HashMap<Integer, Touch> touches = new HashMap<>();
 	private double gameTimer = -2;
 	final double gameEndTime = 35;
+	final double powerUpTimer = 20;
+	final int swordLength = 35;
 	private boolean loading = false;
+	int touchNumber = 0;
 	Texture background;
 
 	@Override
@@ -26,6 +30,11 @@ public class SamfNinja extends ApplicationAdapter {
 		beerDrawer = new SpriteBatch();
 		// connect the socket and receive generated sprites from the server
 		socket = new BeerSocket();
+
+		// instancing objects for touch feature
+		for (int i = 0; i < swordLength; i++) {
+			touches.put(i, new Touch(i, 0, 0));
+		}
 
 		// adding background image
 		background = new Texture("map2.png");
@@ -80,12 +89,10 @@ public class SamfNinja extends ApplicationAdapter {
 				// multiplayer game clicked
 				if (screenY >= buttonsStartPos && screenY <= buttonsStartPos + 100) {
 					loading = true;
-					gameTimer = -2;
 				}
 				// solo game clicked
 				else if (screenY >= buttonsStartPos + 100 && screenY <= buttonsStartPos + 200) {
 					loading = true;
-					gameTimer = -2;
 				}
 				return true;
 			};
@@ -93,14 +100,15 @@ public class SamfNinja extends ApplicationAdapter {
 			@Override
 			public boolean touchUp(int screenX, int screenY, int pointer, int button) {
 				// multiplayer game clicked
-				if (screenY >= 515 && screenY <= 615) {
+				if (screenY >= buttonsStartPos && screenY <= buttonsStartPos + 100) {
 					socket.setUpGame();
 					generatedSprites = socket.generateSprites();
+					gameTimer = -2;
 				}
 				// solo game clicked
-				else if (screenY >= 615 && screenY <= 715) {
+				else if (screenY >= buttonsStartPos + 100 && screenY <= buttonsStartPos + 200) {
 					//	socket.setUpGame( solo );
-
+					gameTimer = -2;
 				}
 				return true;
 			};
@@ -122,23 +130,46 @@ public class SamfNinja extends ApplicationAdapter {
 		Gdx.input.setInputProcessor(new InputAdapter(){
 			@Override
 			public boolean touchDragged(int screenX, int screenY, int pointer) {
-				Touch touch = new Touch(screenX, screenY);
-				touches.add(touch);
+				Touch touch = touches.get(touchNumber);
+				touch.x = screenX;
+				touch.y = Gdx.graphics.getHeight() - screenY;
+				touch.display = true;
 				checkHitboxes(touch);
+				touchNumber = (touchNumber + 1) % swordLength;
 				return false;
 			}
 
 			@Override
 			public boolean touchUp(int screenX, int screenY, int pointer, int button) {
-				touches.clear();
+				for (int i = 0; i < swordLength; i++) {
+					Touch touch = touches.get(i);
+					touch.display = false;
+				}
 				return true;
 			}
 		});
 
-		for (Touch touch : touches) {
-			beerDrawer.begin();
-			beerDrawer.draw(new Texture("touch2.png"), touch.x, touch.y);
-			beerDrawer.end();
+		Touch prevTouch = null;
+		for (Touch touch : touches.values()) {
+			if (touch.display) {
+				beerDrawer.begin();
+
+				if (prevTouch != null) {
+					float deltaX = (float) touch.x - prevTouch.x;
+					float deltaY = (float) touch.y - prevTouch.y;
+
+					while ((Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10) && prevTouch.x != 0 && touch.id - prevTouch.id == 1) {
+						beerDrawer.draw(touch.texture, touch.x-deltaX/2, touch.y-deltaY/2);
+						beerDrawer.draw(touch.texture, prevTouch.x+deltaX/2, prevTouch.y+deltaY/2);
+						deltaX = Math.signum(deltaX)*Math.max(Math.abs(deltaX) - 2, 2);
+						deltaY = Math.signum(deltaY)*Math.max(Math.abs(deltaY) - 2, 2);
+					}
+				}
+				prevTouch = touch;
+
+				beerDrawer.draw(touch.texture, touch.x, touch.y);
+				beerDrawer.end();
+			}
 		}
 	}
 
