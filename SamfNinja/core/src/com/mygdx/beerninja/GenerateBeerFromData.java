@@ -10,60 +10,65 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class GenerateBeerFromData {
-    List<JSONObject> data;
+    List<Bottle> bottles;
     Integer size;
     BeerSocket socket;
 
     public GenerateBeerFromData(ArrayList<JSONObject> input, BeerSocket inputSocket) {
-        data = input;
         size = input.size();
         socket = inputSocket;
-    }
 
-    public List<Bottle> spawn(double gameTime) {
-        List<Bottle> bottles = new ArrayList<>();
-        String player = socket.player;
+        List<Bottle> inputBottles = new ArrayList<>();
 
         try {
-            for (JSONObject spriteData : data) {
-                double beerSpawnTime = (double) spriteData.get("secondsToSpawn");
-
-                if(gameTime > beerSpawnTime && gameTime < beerSpawnTime + 5) {
+            for (JSONObject spriteData : input) {
                     int bottleId = (int) spriteData.get("id");
+                    double beerSpawnTime = (double) spriteData.get("secondsToSpawn");
                     int yPos = (int) spriteData.get("offsetY");
                     String beerPlayer = (String) spriteData.get("player");
                     int bottleVelocity = (int) spriteData.get("velocity");
 
-                    Bottle bottle = new Bottle(bottleId, beerPlayer, yPos, bottleVelocity, beerSpawnTime, Gdx.graphics.getHeight(), player);
-                    bottles.add(bottle);
+                    Bottle bottle = new Bottle(bottleId, beerPlayer, yPos, bottleVelocity, beerSpawnTime, Gdx.graphics.getHeight(), inputSocket.player);
+                    inputBottles.add(bottle);
                 }
-            }
-        }
-        catch (JSONException e) {
+            } catch (JSONException e) {
             e.printStackTrace();
         }
 
-        return bottles;
+        bottles = inputBottles;
+    }
+
+    public List<Bottle> spawn(double gameTime) {
+        List<Bottle> currentBottles = new ArrayList<>();
+
+        for (Bottle bottle : bottles) {
+            double beerSpawnTime = bottle.beerSpawnTime;
+
+            if(gameTime > beerSpawnTime && gameTime < beerSpawnTime + 5) {
+                currentBottles.add(bottle);
+            }
+        }
+
+        // Play sound when spawning new bottles
+        //if (beerBottles.size() > numberOfBottles) {
+            //Sound beerPop = Gdx.audio.newSound(Gdx.files.internal("pop.mp3"));
+            //beerPop.play();
+        //}
+
+
+        return currentBottles;
     }
 
     public void caughtBottle(int id, double xPos) {
-        JSONObject slicedBeer = null;
-
-        for (JSONObject spriteData : data) {
-            try {
-                int bottleId = (int) spriteData.get("id");
-                if (bottleId == id) {
-                    slicedBeer = spriteData;
-                }
-            } catch (JSONException e) {
-                e.printStackTrace();
+        for (Bottle bottle : bottles) {
+            if (bottle.bottleId == id) {
+                bottles.remove(bottle);
+                socket.caughtBottle(id, xPos);
+                break;
             }
         }
 
         Sound beerPop = Gdx.audio.newSound(Gdx.files.internal("break.mp3"));
         beerPop.play();
-
-        socket.caughtBottle(id, xPos);
-        data.remove(slicedBeer);
     }
 }

@@ -14,11 +14,11 @@ public class SamfNinja extends ApplicationAdapter {
 	SpriteBatch beerDrawer;
 	BeerSocket socket;
 	GenerateBeerFromData generatedSprites = null;
-	List<Bottle> beerBottles = new ArrayList<>();
 	List<Touch> touches = new ArrayList<>();
 	private double gameTimer = -2;
 	final double gameEndTime = 35;
 	private boolean loading = false;
+	Texture background;
 
 	@Override
 	public void create () {
@@ -26,6 +26,9 @@ public class SamfNinja extends ApplicationAdapter {
 		beerDrawer = new SpriteBatch();
 		// connect the socket and receive generated sprites from the server
 		socket = new BeerSocket();
+
+		// adding background image
+		background = new Texture("map2.png");
 
 		// play sound to start off the game
 		Sound beerPop = Gdx.audio.newSound(Gdx.files.internal("crack.mp3"));
@@ -41,11 +44,10 @@ public class SamfNinja extends ApplicationAdapter {
 			gameTimer += Gdx.graphics.getDeltaTime();
 			
 			if (gameTimer < gameEndTime) {
-				Texture text = new Texture("map2.png");
 				float brightness = (float) Math.max(0.7, (gameTimer - Math.round(gameTimer)) + 0.5);
 				beerDrawer.begin();
 				beerDrawer.setColor(brightness, brightness, 1F, 1F);
-				beerDrawer.draw(text, 0, 0);
+				beerDrawer.draw(background, 0, 0);
 				beerDrawer.setColor(1F, 1F, 1F, 1F);
 				beerDrawer.end();
 
@@ -78,10 +80,12 @@ public class SamfNinja extends ApplicationAdapter {
 				// multiplayer game clicked
 				if (screenY >= buttonsStartPos && screenY <= buttonsStartPos + 100) {
 					loading = true;
+					gameTimer = -2;
 				}
 				// solo game clicked
 				else if (screenY >= buttonsStartPos + 100 && screenY <= buttonsStartPos + 200) {
 					loading = true;
+					gameTimer = -2;
 				}
 				return true;
 			};
@@ -104,22 +108,13 @@ public class SamfNinja extends ApplicationAdapter {
 	}
 
 	private void renderBeerSprites() {
-		int numberOfBottles = beerBottles.size();
-		beerBottles.clear();
-
-		beerBottles = generatedSprites.spawn(gameTimer);
-		for (Bottle beerBottle : beerBottles) {
+		for (Bottle beerBottle : generatedSprites.spawn(gameTimer)) {
 			double x = beerBottle.getXOffset(gameTimer);
 			double y = beerBottle.getYOffset(gameTimer);
 
 			beerDrawer.begin();
 			beerDrawer.draw(beerBottle.beerTexture, (float) x, (float) y);
 			beerDrawer.end();
-		}
-
-		if (beerBottles.size() > numberOfBottles) {
-			//Sound beerPop = Gdx.audio.newSound(Gdx.files.internal("pop.mp3"));
-			//beerPop.play();
 		}
 	}
 
@@ -151,7 +146,7 @@ public class SamfNinja extends ApplicationAdapter {
 		int beerWidth = 65;
 		int beerHeight = 200;
 
-		for (Bottle beerBottle : beerBottles) {
+		for (Bottle beerBottle : generatedSprites.spawn(gameTimer)) {
 			double minX = beerBottle.getXOffset(gameTimer);
 			double minY = beerBottle.getYOffset(gameTimer);
 

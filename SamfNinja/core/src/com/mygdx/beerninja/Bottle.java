@@ -23,6 +23,8 @@ public class Bottle extends ApplicationAdapter {
         yStartPos = screenHeight - y;
         bottleVelocity = velocity;
         myPlayerString = myPlayer;
+
+        System.out.println("creating bottl: "+id);
     }
 
     private Texture getTexture(String player, String me) {
