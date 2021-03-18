@@ -12,6 +12,7 @@ import io.socket.client.Socket;
 import io.socket.emitter.Emitter;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class BeerSocket {
@@ -122,13 +123,8 @@ public class BeerSocket {
                     String touchDataString = (String) receivedData.get("touches");
                     JSONObject touchData = new JSONObject(touchDataString);
 
-                    if (touchData != null) {
-                        for (int i = 0; i< touchData.length(); i++){
-                            parsedTouchData.add((JSONObject) touchData.get(Integer.toString(i)));
-                        }
-                    }
-
-                    for (JSONObject touch : parsedTouchData) {
+                    for (int i = 0; i< touchData.length(); i++){
+                        JSONObject touch = (JSONObject) touchData.get(Integer.toString(i));
                         int touchId = (int) touch.get("id");
                         int touchXPos = (int) touch.get("x");
                         int touchYPos = (int) touch.get("y");
@@ -152,7 +148,6 @@ public class BeerSocket {
         socket.on("getPoints", new Emitter.Listener() {
             @Override
             public void call(Object... args) {
-
                 JSONObject receivedData = (JSONObject) args[0];
                 try {
                     myPoints = receivedData.getInt(playerID);

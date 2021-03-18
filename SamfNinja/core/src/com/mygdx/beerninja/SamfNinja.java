@@ -41,11 +41,14 @@ public class SamfNinja extends ApplicationAdapter {
 	public void create () {
 		// instancing a new batch drawer
 		screenDrawer = new SpriteBatch();
+
 		// instancing a new font drawer
 		font = new BitmapFont();
 		font.getData().setScale(2, 2);
 		// connect the socket and receive generated sprites from the server
 		socket = new BeerSocket(tailLength);
+		socket.getTouches();
+		socket.getPoints();
 
 		// instancing objects for touch feature
 		for (int i = 0; i < tailLength; i++) {
@@ -74,8 +77,6 @@ public class SamfNinja extends ApplicationAdapter {
 			renderBeerSprites();
 			getAndRenderUserTouches();
 			checkHitboxes();
-			socket.getPoints();
-			socket.getTouches();
 
 			for (Touch touch : touches.values()) {
 				if (touch.display) {
@@ -244,25 +245,10 @@ public class SamfNinja extends ApplicationAdapter {
 		}
 
 		// render enemy touches
-		Touch prevEnemy = null;
 		for (Touch touch : socket.enemyTouches.values()) {
 			if (touch.display) {
 				screenDrawer.begin();
-
-				if (prevEnemy != null) {
-					float deltaX = (float) touch.x - prevEnemy.x;
-					float deltaY = (float) touch.y - prevEnemy.y;
-
-					while ((Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10) && prevEnemy.x != 0 && touch.id - prevEnemy.id == 1) {
-						screenDrawer.draw(touch.texture, touch.x-deltaX/2, touch.y-deltaY/2);
-						screenDrawer.draw(touch.texture, prevEnemy.x+deltaX/2, prevEnemy.y+deltaY/2);
-						deltaX = Math.signum(deltaX)*Math.max(Math.abs(deltaX) - 2, 2);
-						deltaY = Math.signum(deltaY)*Math.max(Math.abs(deltaY) - 2, 2);
-					}
-				}
-				prevEnemy = touch;
-
-				screenDrawer.draw(touch.texture, touch.x, touch.y);
+				screenDrawer.draw(touch.texture, screenWidth-touch.x, touch.y);
 				screenDrawer.end();
 			}
 		}
