@@ -57,12 +57,13 @@ public class GenerateBeerFromData {
         return currentBottles;
     }
 
-    public void caughtBottle(int id, double xPos, boolean devMode) {
-        float timestamp = System.currentTimeMillis();
+    public void caughtBottle(CaughtBottle caughtBottle, boolean devMode) {
+        //float timestamp = System.currentTimeMillis();
+        //caughtBottle.time = timestamp;
+
         for (Bottle bottle : bottles) {
-            if (bottle.bottleId == id) {
+            if (bottle.bottleId == caughtBottle.id) {
                 bottles.remove(bottle);
-                CaughtBottle caughtBottle = new CaughtBottle(id, timestamp, xPos, bottle.bottlePlayerId);
                 socket.sendCaughtBottle(caughtBottle);
                 break;
             }

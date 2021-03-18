@@ -18,11 +18,13 @@ public class SamfNinja extends ApplicationAdapter {
 	Texture loadingScreen;
 	Texture hitboxTexture;
 	Texture gameOverTexture;
+	Texture splash;
 	BitmapFont font;
 	// our own help-classes
 	BeerSocket socket;
 	GenerateBeerFromData generatedSprites = null;
 	HashMap<Integer, Touch> touches = new HashMap<>();
+	CaughtBottle latestCaughtBottle = null;
 	// variables;
 	private boolean loading = false;
 	int currentTouchIndex = 0;
@@ -53,9 +55,10 @@ public class SamfNinja extends ApplicationAdapter {
 
 		// setting textures to correct images
 		background = new Texture(backgroundImage);
-		homeScreen = new Texture("home.png");
+		homeScreen = new Texture("home2.png");
 		loadingScreen = new Texture("loading.png");
 		gameOverTexture = new Texture("gameOver.png");
+		splash = new Texture("splash.png");
 	}
 
 	@Override
@@ -96,6 +99,12 @@ public class SamfNinja extends ApplicationAdapter {
 		font.setColor(1,1,0.2F,1);
 		font.draw(screenDrawer, "Meg: " + socket.myPoints, 50, Gdx.graphics.getHeight() - 50);
 		font.draw(screenDrawer, "P2: " + socket.enemyPoints, screenWidth-80, Gdx.graphics.getHeight() - 50);
+		if (latestCaughtBottle != null && latestCaughtBottle.time > gameTimer - 5 && !devMode) {
+			brightness = (float) (1.0-(gameTimer - latestCaughtBottle.time));
+			screenDrawer.setColor(brightness, brightness, brightness, brightness);
+			screenDrawer.draw(splash, (float) latestCaughtBottle.xcoor - 80, (float) latestCaughtBottle.ycoor + 40);
+			screenDrawer.setColor(1F, 1F, 1F, 1F);
+		}
 		screenDrawer.end();
 	}
 
@@ -238,7 +247,9 @@ public class SamfNinja extends ApplicationAdapter {
 			// check touch hits with bottles
 			if (touch.display && hitbox.left <= touch.x && touch.x <= hitbox.right) {
 				if (hitbox.bottom <= touch.y && touch.y <= hitbox.top) {
-					generatedSprites.caughtBottle(beerBottle.bottleId, beerBottle.getXOffset(gameTimer), devMode);
+					CaughtBottle caughtBottle = new CaughtBottle(beerBottle.bottleId, gameTimer, beerBottle.getXOffset(gameTimer), beerBottle.getYOffset(gameTimer), socket.playerID);
+					latestCaughtBottle = caughtBottle;
+					generatedSprites.caughtBottle(caughtBottle, devMode);
 				}
 			}
 
@@ -247,7 +258,7 @@ public class SamfNinja extends ApplicationAdapter {
 				for (Bottle compareBottle : generatedSprites.spawn(gameTimer)) {
 					Hitbox obstacle = compareBottle.getHitbox(gameTimer);
 
-					if (beerBottle != compareBottle && !beerBottle.collision) {
+					if (beerBottle != compareBottle && !beerBottle.collision && !beerBottle.bottlePlayerId.equals(compareBottle.bottlePlayerId)) {
 						if (hitbox.right > obstacle.left && hitbox.left < obstacle.right) {
 							if (hitbox.top > obstacle.bottom && hitbox.bottom < obstacle.top) {
 								beerBottle.xStartPos = (int) beerBottle.getXOffset(gameTimer);
