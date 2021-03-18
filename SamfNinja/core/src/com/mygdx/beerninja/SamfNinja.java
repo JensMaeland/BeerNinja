@@ -117,18 +117,26 @@ public class SamfNinja extends ApplicationAdapter {
 
 	public void mainMenu () {
 		screenDrawer.begin();
+		final int gameCountDown = 2;
+		final int buttonsStartPos = 515;
 
 		if (loading) {
-			screenDrawer.draw(loadingScreen, 0, 0);
-			screenDrawer.end();
-			return;
+			if (socket.playerID == null || socket.enemyID == null) {
+				screenDrawer.draw(loadingScreen, 0, 0);
+				screenDrawer.end();
+				System.out.println("Venter på motspiller..");
+				return;
+			}
+
+			generatedSprites = socket.generateSprites();
+			gameTimer = -gameCountDown;
+			loading = false;
+			System.out.println("Spillet starter..");
 		}
 
 		screenDrawer.draw(homeScreen, 0, 0);
 		screenDrawer.end();
 
-		final int buttonsStartPos = 515;
-		final int gameCountDown = 2;
 		Gdx.input.setInputProcessor(new InputAdapter(){
 			@Override
 			public boolean touchDown(int screenX, int screenY, int pointer, int button) {
@@ -145,27 +153,21 @@ public class SamfNinja extends ApplicationAdapter {
 
 			@Override
 			public boolean touchUp(int screenX, int screenY, int pointer, int button) {
-				boolean multiplayer = false;
-
 				// multiplayer game clicked
 				if (screenY >= buttonsStartPos && screenY <= buttonsStartPos + 100) {
-					multiplayer = true;
+					socket.setUpGame(true);
 				}
 				// solo game clicked
 				else if (screenY >= buttonsStartPos + 100 && screenY <= buttonsStartPos + 200) {
-					multiplayer = false;
+					socket.setUpGame(false);
 				}
 				// dev game clicked
 				else if (screenY >= buttonsStartPos + 200 && screenY <= buttonsStartPos + 300) {
-					multiplayer = true;
+					socket.setUpGame(true);
 				}
 
 				// any game button clicked
 				if (screenY >= buttonsStartPos && screenY <= buttonsStartPos + 300) {
-					socket.setUpGame(multiplayer);
-					generatedSprites = socket.generateSprites();
-					gameTimer = -gameCountDown;
-
 					if (!devMode) {
 						// play sound to start off the game
 						Sound beerPop = Gdx.audio.newSound(Gdx.files.internal("crack.mp3"));

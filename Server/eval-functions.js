@@ -23,12 +23,40 @@ let players = {};
 
 const getPlayers = () => players;
 
+const isBottleInOpponentsList = (playerID, bottle) => {
+  jsonBottle = JSON.parse(bottle);
+  if (players.player1.playerID == playerID) {
+    for (let alreadyCaughtBottle of players.player2.bottles) {
+      if (alreadyCaughtBottle.id == jsonBottle.id) {
+        return true;
+      }
+    }
+  } else if (players.player2.playerID == playerID) {
+    for (let alreadyCaughtBottle of players.player1.bottles) {
+      if (alreadyCaughtBottle.id == jsonBottle.id) {
+        return true;
+      }
+    }
+  }
+  return false;
+};
+
+const appendBottle = (playerID, bottle) => {
+  jsonBottle = JSON.parse(bottle);
+  if (players.player1.playerID == playerID) {
+    players.player1.bottles.push(jsonBottle);
+  } else if (players.player2.playerID == playerID) {
+    players.player2.bottles.push(jsonBottle);
+  }
+};
+
 const setScore = (playerID, score) => {
   if (players.player1.playerID == playerID) {
     players.player1.score += score;
   } else if (players.player2.playerID == playerID) {
     players.player2.score += score;
   }
+  return players;
 };
 
 const createInitialPlayerState = () => {
@@ -122,4 +150,6 @@ module.exports = {
   pushBottleToCorrectPlayer,
   getPlayers,
   setScore,
+  appendBottle,
+  isBottleInOpponentsList,
 };

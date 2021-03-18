@@ -15,8 +15,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class BeerSocket {
-    String playerID;
-    String enemyID;
+    String playerID = null;
+    String enemyID = null;
     int myPoints;
     int enemyPoints;
     HashMap<Integer, Touch> enemyTouches = new HashMap<>();
