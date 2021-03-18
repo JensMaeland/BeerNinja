@@ -30,11 +30,12 @@ httpServer.listen(8080, () => {
 });
 
 io.on("connection", (socket) => {
-  addPlayer(socket, testmode);
 
   socket.emit("socketID", { id: socket.id });
 
   socket.on("setUpGame", () => {
+    addPlayer(socket, testmode);
+
     generatedBottlelist = generateListOfBeerObjects(30, isSinglePlayer);
     console.log(socket.id + " joined..");
     let tempPlayers = getPlayers();
@@ -60,6 +61,7 @@ io.on("connection", (socket) => {
   });
   socket.on("touches", (touches) => {
     let tempPlayers = getPlayers();
+    console.log("sending touches..")
     if (socket.id == tempPlayers.player1.playerID) {
       io.to(tempPlayers.player2.playerID).emit("touches", { touches: touches });
     } else if (socket.id == tempPlayers.player2.playerID) {

@@ -119,7 +119,8 @@ public class BeerSocket {
                 parsedTouchData.clear();
 
                 try {
-                    touchData = (JSONObject) receivedData.get("touches");
+                    String touchDataString = (String) receivedData.get("touches");
+                    JSONObject touchData = new JSONObject(touchDataString);
 
                     if (touchData != null) {
                         for (int i = 0; i< touchData.length(); i++){
