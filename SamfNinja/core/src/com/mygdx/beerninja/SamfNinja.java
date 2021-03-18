@@ -16,7 +16,6 @@ public class SamfNinja extends ApplicationAdapter {
 	Texture background;
 	Texture homeScreen;
 	Texture loadingScreen;
-	Texture hitboxTexture;
 	Texture gameOverTexture;
 	Texture splash;
 	BitmapFont font;
@@ -46,11 +45,11 @@ public class SamfNinja extends ApplicationAdapter {
 		font = new BitmapFont();
 		font.getData().setScale(2, 2);
 		// connect the socket and receive generated sprites from the server
-		socket = new BeerSocket();
+		socket = new BeerSocket(tailLength);
 
 		// instancing objects for touch feature
 		for (int i = 0; i < tailLength; i++) {
-			touches.put(i, new Touch(i, 0, 0));
+			touches.put(i, new Touch(i, 0, 0, 0, false));
 		}
 
 		// setting textures to correct images
@@ -76,6 +75,14 @@ public class SamfNinja extends ApplicationAdapter {
 			getAndRenderUserTouches();
 			checkHitboxes();
 			socket.getPoints();
+			socket.getTouches();
+
+			for (Touch touch : touches.values()) {
+				if (touch.display) {
+					socket.sendTouches(touches);
+					break;
+				}
+			}
 		}
 		else {
 			gameOver();
@@ -110,62 +117,63 @@ public class SamfNinja extends ApplicationAdapter {
 
 	public void mainMenu () {
 		screenDrawer.begin();
-		if (!loading) {
-			screenDrawer.draw(homeScreen, 0, 0);
-		}
-		else {
+
+		if (loading) {
 			screenDrawer.draw(loadingScreen, 0, 0);
+			screenDrawer.end();
+			return;
 		}
+
+		screenDrawer.draw(homeScreen, 0, 0);
 		screenDrawer.end();
 
 		final int buttonsStartPos = 515;
+		final int gameCountDown = 2;
 		Gdx.input.setInputProcessor(new InputAdapter(){
 			@Override
 			public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-				// multiplayer game clicked
-				if (screenY >= buttonsStartPos && screenY <= buttonsStartPos + 100) {
-					loading = true;
-				}
-				// solo game clicked
-				else if (screenY >= buttonsStartPos + 100 && screenY <= buttonsStartPos + 200) {
+				// game button clicked
+				if (screenY >= buttonsStartPos && screenY <= buttonsStartPos + 300) {
 					loading = true;
 				}
 				// dev game clicked
-				else if (screenY >= buttonsStartPos + 200 && screenY <= buttonsStartPos + 300) {
-					loading = true;
+				if (screenY >= buttonsStartPos + 200 && screenY <= buttonsStartPos + 300) {
 					devMode = true;
 				}
 				return true;
-			};
+			}
 
 			@Override
 			public boolean touchUp(int screenX, int screenY, int pointer, int button) {
+				boolean multiplayer = false;
+
 				// multiplayer game clicked
 				if (screenY >= buttonsStartPos && screenY <= buttonsStartPos + 100) {
-					socket.setUpGame();
-					generatedSprites = socket.generateSprites();
-					gameTimer = -2;
+					multiplayer = true;
 				}
 				// solo game clicked
 				else if (screenY >= buttonsStartPos + 100 && screenY <= buttonsStartPos + 200) {
-					//	socket.setUpGame( solo );
-					gameTimer = -2;
+					multiplayer = false;
 				}
 				// dev game clicked
 				else if (screenY >= buttonsStartPos + 200 && screenY <= buttonsStartPos + 300) {
-					hitboxTexture = new Texture("touch.png");
-					socket.setUpGame();
-					generatedSprites = socket.generateSprites();
-					gameTimer = -2;
+					multiplayer = true;
 				}
 
-				if (screenY >= buttonsStartPos && screenY <= buttonsStartPos + 200) {
-					// play sound to start off the game
-					Sound beerPop = Gdx.audio.newSound(Gdx.files.internal("crack.mp3"));
-					beerPop.play();
-					// play background music
-					Sound backgroundMusic = Gdx.audio.newSound(Gdx.files.internal("theMidnight.mp3"));
-					backgroundMusic.play();
+				// any game button clicked
+				if (screenY >= buttonsStartPos && screenY <= buttonsStartPos + 300) {
+					socket.setUpGame(multiplayer);
+					generatedSprites = socket.generateSprites();
+					gameTimer = -gameCountDown;
+
+					if (!devMode) {
+						// play sound to start off the game
+						Sound beerPop = Gdx.audio.newSound(Gdx.files.internal("crack.mp3"));
+						beerPop.play();
+						// play background music
+						Sound backgroundMusic = Gdx.audio.newSound(Gdx.files.internal("theMidnight.mp3"));
+						backgroundMusic.play();
+					}
 				}
 				return true;
 			};
@@ -193,6 +201,7 @@ public class SamfNinja extends ApplicationAdapter {
 				Touch touch = touches.get(currentTouchIndex);
 				touch.x = screenX;
 				touch.y = Gdx.graphics.getHeight() - screenY;
+				touch.time = gameTimer;
 				touch.display = true;
 				currentTouchIndex = (currentTouchIndex + 1) % tailLength;
 				return false;
@@ -231,11 +240,35 @@ public class SamfNinja extends ApplicationAdapter {
 				screenDrawer.end();
 			}
 		}
+
+		// render enemy touches
+		Touch prevEnemy = null;
+		for (Touch touch : socket.enemyTouches.values()) {
+			if (touch.display) {
+				screenDrawer.begin();
+
+				if (prevEnemy != null) {
+					float deltaX = (float) touch.x - prevEnemy.x;
+					float deltaY = (float) touch.y - prevEnemy.y;
+
+					while ((Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10) && prevEnemy.x != 0 && touch.id - prevEnemy.id == 1) {
+						screenDrawer.draw(touch.texture, touch.x-deltaX/2, touch.y-deltaY/2);
+						screenDrawer.draw(touch.texture, prevEnemy.x+deltaX/2, prevEnemy.y+deltaY/2);
+						deltaX = Math.signum(deltaX)*Math.max(Math.abs(deltaX) - 2, 2);
+						deltaY = Math.signum(deltaY)*Math.max(Math.abs(deltaY) - 2, 2);
+					}
+				}
+				prevEnemy = touch;
+
+				screenDrawer.draw(touch.texture, touch.x, touch.y);
+				screenDrawer.end();
+			}
+		}
 	}
 
 	private void checkHitboxes() {
 		for (Bottle beerBottle : generatedSprites.spawn(gameTimer)) {
-			Hitbox hitbox = beerBottle.getHitbox(gameTimer);
+			Hitbox hitbox = beerBottle.getHitbox(gameTimer, screenDrawer, devMode);
 			Touch touch;
 			if (currentTouchIndex > 0) {
 				touch = touches.get(currentTouchIndex-1);
@@ -247,16 +280,16 @@ public class SamfNinja extends ApplicationAdapter {
 			// check touch hits with bottles
 			if (touch.display && hitbox.left <= touch.x && touch.x <= hitbox.right) {
 				if (hitbox.bottom <= touch.y && touch.y <= hitbox.top) {
-					CaughtBottle caughtBottle = new CaughtBottle(beerBottle.bottleId, gameTimer, beerBottle.getXOffset(gameTimer), beerBottle.getYOffset(gameTimer), socket.playerID);
+					CaughtBottle caughtBottle = new CaughtBottle(beerBottle.bottleId, gameTimer, beerBottle.getXOffset(gameTimer), beerBottle.getYOffset(gameTimer), beerBottle.bottlePlayerId);
 					latestCaughtBottle = caughtBottle;
 					generatedSprites.caughtBottle(caughtBottle, devMode);
 				}
 			}
 
-			// check bootle hitbox with other bottles
+			// check bottle hitbox with other bottles
 			if (hitbox.left > 0 && hitbox.top > 0 && hitbox.left < screenWidth && hitbox.top < Gdx.graphics.getHeight()) {
 				for (Bottle compareBottle : generatedSprites.spawn(gameTimer)) {
-					Hitbox obstacle = compareBottle.getHitbox(gameTimer);
+					Hitbox obstacle = compareBottle.getHitbox(gameTimer, screenDrawer, devMode);
 
 					if (beerBottle != compareBottle && !beerBottle.collision && !beerBottle.bottlePlayerId.equals(compareBottle.bottlePlayerId)) {
 						if (hitbox.right > obstacle.left && hitbox.left < obstacle.right) {
@@ -267,16 +300,6 @@ public class SamfNinja extends ApplicationAdapter {
 						}
 					}
 				}
-			}
-
-			// draw the hitboxes in devMode
-			if (devMode) {
-				screenDrawer.begin();
-				screenDrawer.draw(hitboxTexture, (int) (hitbox.left), (int) (hitbox.top));
-				screenDrawer.draw(hitboxTexture, (int) (hitbox.right), (int) (hitbox.bottom));
-				screenDrawer.draw(hitboxTexture, (int) (hitbox.left), (int) (hitbox.bottom));
-				screenDrawer.draw(hitboxTexture, (int) (hitbox.right), (int) (hitbox.top));
-				screenDrawer.end();
 			}
 		}
 	}

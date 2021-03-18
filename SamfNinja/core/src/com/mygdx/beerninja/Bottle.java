@@ -3,6 +3,7 @@ package com.mygdx.beerninja;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 
 public class Bottle extends ApplicationAdapter {
@@ -34,14 +35,15 @@ public class Bottle extends ApplicationAdapter {
     }
 
     private TextureRegion getTexture(String player, String me) {
+        Texture beerTexture;
+
         if (player.equals(me)) {
-            Texture beerTexture = new Texture("pils.png");
-            return new TextureRegion(beerTexture);
+            beerTexture = new Texture("pils.png");
         }
         else {
-            Texture beerTexture = new Texture("dag.png");
-            return new TextureRegion(beerTexture);
+            beerTexture = new Texture("dag.png");
         }
+        return new TextureRegion(beerTexture);
     }
 
     private int getXPos(String player, String me) {
@@ -77,44 +79,26 @@ public class Bottle extends ApplicationAdapter {
         return yStartPos - offset*bottleVelocity;
     }
 
-    public Hitbox getHitbox(double gameTime) {
+    public Hitbox getHitbox(double gameTime, SpriteBatch screenDrawer, boolean devMode) {
         int beerWidth = beerTexture.getRegionWidth();
         int beerHeight = beerTexture.getRegionHeight();
 
         double minX = getXOffset(gameTime);
         double minY = getYOffset(gameTime);
-        double maxX = getXOffset(gameTime) + beerWidth;
-        double maxY = getYOffset(gameTime) + beerHeight;
 
-        double rotatedMinX = hitbox.rotateX(minX, minY, minX - beerWidth/2, minY - beerHeight/2, getSpin(gameTime));
-        double rotatedMinY = hitbox.rotateY(minX, minY, minX - beerWidth/2, minY - beerHeight/2, getSpin(gameTime));
+        double spinAngle = getSpin(gameTime);
 
-        double rotatedMaxX = hitbox.rotateX(maxX, maxY, maxX + beerWidth/2, maxY + beerHeight/2, getSpin(gameTime));
-        double rotatedMaxY = hitbox.rotateY(maxX, maxY, maxX + beerWidth/2, maxY + beerHeight/2, getSpin(gameTime));
+        hitbox.updateHitbox(minX, minY, beerWidth, beerHeight, spinAngle);
 
-        double newMinX, newMinY, newMaxX, newMaxY;
-        if (rotatedMaxX > rotatedMinX) {
-            newMaxX = rotatedMaxX;
-            newMinX = rotatedMinX;
+        // draw the hitboxes in devMode
+        if (devMode) {
+            screenDrawer.begin();
+            screenDrawer.draw(hitbox.hitboxTexture, (int) (hitbox.left), (int) (hitbox.top));
+            screenDrawer.draw(hitbox.hitboxTexture, (int) (hitbox.right), (int) (hitbox.bottom));
+            screenDrawer.draw(hitbox.hitboxTexture, (int) (hitbox.left), (int) (hitbox.bottom));
+            screenDrawer.draw(hitbox.hitboxTexture, (int) (hitbox.right), (int) (hitbox.top));
+            screenDrawer.end();
         }
-        else {
-            newMaxX = rotatedMinX;
-            newMinX = rotatedMaxX;
-        }
-
-        if (rotatedMaxY > rotatedMinY) {
-            newMaxY = rotatedMaxY;
-            newMinY = rotatedMinY;
-        }
-        else {
-            newMaxY = rotatedMinY;
-            newMinY = rotatedMaxY;
-        }
-
-        hitbox.left = newMinX;
-        hitbox.top = newMaxY;
-        hitbox.right = newMaxX;
-        hitbox.bottom = newMinY;
 
         return hitbox;
     }

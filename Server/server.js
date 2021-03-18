@@ -17,7 +17,7 @@ const options = {
 const io = require("socket.io")(httpServer, options);
 
 // lets user play agains an idle player2
-const testmode = true;
+const testmode = false;
 
 isSinglePlayer = false;
 
