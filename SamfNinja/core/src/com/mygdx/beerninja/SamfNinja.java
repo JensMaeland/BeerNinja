@@ -77,13 +77,7 @@ public class SamfNinja extends ApplicationAdapter {
 			renderBeerSprites();
 			getAndRenderUserTouches();
 			checkHitboxes();
-
-			for (Touch touch : touches.values()) {
-				if (touch.display) {
-					socket.sendTouches(touches);
-					break;
-				}
-			}
+			socket.sendTouches(touches);
 		}
 		else {
 			gameOver();
@@ -273,6 +267,16 @@ public class SamfNinja extends ApplicationAdapter {
 					generatedSprites.caughtBottle(caughtBottle, devMode);
 				}
 			}
+
+			// check enemy touch hits with bottles
+			//Touch enemyTouch = lates timed touck
+			//if (touch.display && hitbox.left <= touch.x && touch.x <= hitbox.right) {
+			//	if (hitbox.bottom <= touch.y && touch.y <= hitbox.top) {
+			//		CaughtBottle caughtBottle = new CaughtBottle(beerBottle.bottleId, gameTimer, beerBottle.getXOffset(gameTimer), beerBottle.getYOffset(gameTimer), beerBottle.bottlePlayerId);
+			//		latestCaughtBottle = caughtBottle;
+			//		generatedSprites.caughtBottle(caughtBottle, devMode);
+			//	}
+			//}
 
 			// check bottle hitbox with other bottles
 			if (hitbox.left > 0 && hitbox.top > 0 && hitbox.left < screenWidth && hitbox.top < Gdx.graphics.getHeight()) {

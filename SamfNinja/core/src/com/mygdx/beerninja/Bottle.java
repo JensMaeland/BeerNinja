@@ -76,7 +76,7 @@ public class Bottle extends ApplicationAdapter {
 
     public double getYOffset(Double gameTime) {
         double offset = (gameTime - beerSpawnTime)/2;
-        return yStartPos - offset*bottleVelocity;
+        return yStartPos - offset*offset*3*bottleVelocity;
     }
 
     public Hitbox getHitbox(double gameTime, SpriteBatch screenDrawer, boolean devMode) {
@@ -110,13 +110,13 @@ public class Bottle extends ApplicationAdapter {
             if (!collision) {
                 return -offset*bottleSpin*200;
             }
-            return bottleSpin*50;
+            return bottleSpin*30;
         }
         else {
             if (!collision) {
                 return offset*bottleSpin*200;
             }
-            return -bottleSpin*50;
+            return -bottleSpin*30;
         }
     }
 
