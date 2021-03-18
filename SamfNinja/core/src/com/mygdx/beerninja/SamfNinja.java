@@ -7,90 +7,109 @@ import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
 
 import java.util.HashMap;
-import java.util.List;
 
 public class SamfNinja extends ApplicationAdapter {
-	SpriteBatch beerDrawer;
+	// imported help-classes
+	SpriteBatch screenDrawer;
+	Texture background;
+	Texture homeScreen;
+	Texture loadingScreen;
+	Texture hitboxTexture;
+	Texture gameOverTexture;
+	BitmapFont font;
+	// our own help-classes
 	BeerSocket socket;
 	GenerateBeerFromData generatedSprites = null;
 	HashMap<Integer, Touch> touches = new HashMap<>();
-	private double gameTimer = -2;
-	final double gameEndTime = 35;
-	final double powerUpTimer = 20;
-	final int swordLength = 35;
-	final int beerWidth = 65;
-	final int beerHeight = 200;
+	// variables;
 	private boolean loading = false;
-	int touchNumber = 0;
-	Texture background;
-	BitmapFont font;
+	int currentTouchIndex = 0;
+
+	// game-settings as variables
+	private boolean devMode = false; // set devmode for easier testing
+	private double gameTimer = -2; // set seconds until game start
+	final double gameEndTime = 38; // set duration of each game
+	final double powerUpTimer = 20; // set when the powerUp shoud spawn
+	final int tailLength = 35; // set length of tail when touching the screen
+	final int screenWidth = 500; // set width of game screen
+	String backgroundImage = "map3.png"; // set which background-image should display
 
 	@Override
 	public void create () {
 		// instancing a new batch drawer
-		beerDrawer = new SpriteBatch();
+		screenDrawer = new SpriteBatch();
+		// instancing a new font drawer
+		font = new BitmapFont();
+		font.getData().setScale(2, 2);
 		// connect the socket and receive generated sprites from the server
 		socket = new BeerSocket();
 
-		font = new BitmapFont();
-
 		// instancing objects for touch feature
-		for (int i = 0; i < swordLength; i++) {
+		for (int i = 0; i < tailLength; i++) {
 			touches.put(i, new Touch(i, 0, 0));
 		}
 
-		// adding background image
-		background = new Texture("map2.png");
-
-		// play sound to start off the game
-		Sound beerPop = Gdx.audio.newSound(Gdx.files.internal("crack.mp3"));
-		beerPop.play();
+		// setting textures to correct images
+		background = new Texture(backgroundImage);
+		homeScreen = new Texture("home.png");
+		loadingScreen = new Texture("loading.png");
+		gameOverTexture = new Texture("gameOver.png");
 	}
 
 	@Override
 	public void render () {
 		if (generatedSprites == null) {
 			mainMenu();
+			return;
+		}
+
+		gameTimer += Gdx.graphics.getDeltaTime();
+
+		if (gameTimer < gameEndTime) {
+			renderGUI();
+			renderBeerSprites();
+			getAndRenderUserTouches();
+			checkHitboxes();
+			socket.getPoints();
 		}
 		else {
-			gameTimer += Gdx.graphics.getDeltaTime();
-			
-			if (gameTimer < gameEndTime) {
-				float brightness = (float) Math.max(0.6, (gameTimer - Math.round(gameTimer)) + 0.5);
-				beerDrawer.begin();
-				beerDrawer.setColor(brightness, brightness, 1F, 1F);
-				beerDrawer.draw(background, 0, 0);
-				beerDrawer.setColor(1F, 1F, 1F, 1F);
-
-				font.draw(beerDrawer, Integer.toString(socket.myPoints), 50, Gdx.graphics.getHeight() - 50);
-				font.draw(beerDrawer, Integer.toString(socket.enemyPoints), 490, Gdx.graphics.getHeight() - 50);
-				beerDrawer.end();
-
-				renderBeerSprites();
-				renderUserTouches();
-				socket.getPoints();
-			}
-			else {
-				gameOver();
-			}
+			gameOver();
 		}
 	}
 
-	public void mainMenu () {
-		beerDrawer.begin();
-		if (!loading) {
-			beerDrawer.draw(new Texture("home.png"), 0, 0);
+	public void renderGUI() {
+		float brightness;
+		if (!devMode) {
+			brightness = (float) Math.max(0.6, (gameTimer - Math.round(gameTimer)) + 0.5);
 		}
 		else {
-			beerDrawer.draw(new Texture("loading.png"), 0, 0);
+			brightness = 0.6F;
 		}
-		beerDrawer.end();
+
+		screenDrawer.begin();
+		screenDrawer.setColor(brightness, brightness, 1F, 1F);
+		screenDrawer.draw(background, 0, 0);
+		screenDrawer.setColor(1F, 1F, 1F, 1F);
+
+		font.setColor(1,1,0.2F,1);
+		font.draw(screenDrawer, "Meg: " + socket.myPoints, 50, Gdx.graphics.getHeight() - 50);
+		font.draw(screenDrawer, "P2: " + socket.enemyPoints, screenWidth-80, Gdx.graphics.getHeight() - 50);
+		screenDrawer.end();
+	}
+
+	public void mainMenu () {
+		screenDrawer.begin();
+		if (!loading) {
+			screenDrawer.draw(homeScreen, 0, 0);
+		}
+		else {
+			screenDrawer.draw(loadingScreen, 0, 0);
+		}
+		screenDrawer.end();
 
 		final int buttonsStartPos = 515;
-
 		Gdx.input.setInputProcessor(new InputAdapter(){
 			@Override
 			public boolean touchDown(int screenX, int screenY, int pointer, int button) {
@@ -101,6 +120,11 @@ public class SamfNinja extends ApplicationAdapter {
 				// solo game clicked
 				else if (screenY >= buttonsStartPos + 100 && screenY <= buttonsStartPos + 200) {
 					loading = true;
+				}
+				// dev game clicked
+				else if (screenY >= buttonsStartPos + 200 && screenY <= buttonsStartPos + 300) {
+					loading = true;
+					devMode = true;
 				}
 				return true;
 			};
@@ -118,60 +142,56 @@ public class SamfNinja extends ApplicationAdapter {
 					//	socket.setUpGame( solo );
 					gameTimer = -2;
 				}
+				// dev game clicked
+				else if (screenY >= buttonsStartPos + 200 && screenY <= buttonsStartPos + 300) {
+					hitboxTexture = new Texture("touch.png");
+					socket.setUpGame();
+					generatedSprites = socket.generateSprites();
+					gameTimer = -2;
+				}
+
+				if (screenY >= buttonsStartPos && screenY <= buttonsStartPos + 200) {
+					// play sound to start off the game
+					Sound beerPop = Gdx.audio.newSound(Gdx.files.internal("crack.mp3"));
+					beerPop.play();
+					// play background music
+					Sound backgroundMusic = Gdx.audio.newSound(Gdx.files.internal("theMidnight.mp3"));
+					backgroundMusic.play();
+				}
 				return true;
 			};
 		});
 	}
 
-	private void renderPlayerScores() {
-
-	}
-
 	private void renderBeerSprites() {
-		List<Bottle> beerBottles = generatedSprites.spawn(gameTimer);
+		for (Bottle beerBottle : generatedSprites.spawn(gameTimer)) {
+			float x = (float) beerBottle.getXOffset(gameTimer);
+			float y = (float) beerBottle.getYOffset(gameTimer);
+			int width = beerBottle.beerTexture.getRegionWidth();
+			int height = beerBottle.beerTexture.getRegionHeight();
 
-		for (Bottle beerBottle : beerBottles) {
-			double minX = beerBottle.getXOffset(gameTimer);
-			double minY = beerBottle.getYOffset(gameTimer);
-
-			for (Bottle compareBottle : beerBottles) {
-				double compareX = compareBottle.getXOffset(gameTimer);
-				double compareY = compareBottle.getYOffset(gameTimer);
-
-				if (beerBottle != compareBottle) {
-					if (minX <= compareX + beerWidth && compareX <= minX + beerWidth) {
-						if (minY <= compareY + beerHeight && compareY <= minY + beerHeight) {
-							beerBottle.xStartPos = (int) minX;
-							beerBottle.collision = true;
-						}
-					}
-				}
-			}
-
-			TextureRegion region = new TextureRegion(beerBottle.beerTexture);
-
-			beerDrawer.begin();
-			beerDrawer.draw(region, (float) minX, (float) minY,  (float) beerWidth/2,  (float) beerHeight/2, beerWidth, beerHeight, 1, 1, (float) beerBottle.getSpin(gameTimer));
-			beerDrawer.end();
+			screenDrawer.begin();
+			screenDrawer.draw(beerBottle.beerTexture, x, y, width/2F, height/2F, width, height, 1, 1, (float) beerBottle.getSpin(gameTimer));
+			screenDrawer.end();
 		}
 	}
 
-	private void renderUserTouches() {
+	private void getAndRenderUserTouches() {
+		// get touches
 		Gdx.input.setInputProcessor(new InputAdapter(){
 			@Override
 			public boolean touchDragged(int screenX, int screenY, int pointer) {
-				Touch touch = touches.get(touchNumber);
+				Touch touch = touches.get(currentTouchIndex);
 				touch.x = screenX;
 				touch.y = Gdx.graphics.getHeight() - screenY;
 				touch.display = true;
-				checkTouchHitboxes(touch);
-				touchNumber = (touchNumber + 1) % swordLength;
+				currentTouchIndex = (currentTouchIndex + 1) % tailLength;
 				return false;
 			}
 
 			@Override
 			public boolean touchUp(int screenX, int screenY, int pointer, int button) {
-				for (int i = 0; i < swordLength; i++) {
+				for (int i = 0; i < tailLength; i++) {
 					Touch touch = touches.get(i);
 					touch.display = false;
 				}
@@ -179,57 +199,92 @@ public class SamfNinja extends ApplicationAdapter {
 			}
 		});
 
+		// render touches
 		Touch prevTouch = null;
 		for (Touch touch : touches.values()) {
 			if (touch.display) {
-				beerDrawer.begin();
+				screenDrawer.begin();
 
 				if (prevTouch != null) {
 					float deltaX = (float) touch.x - prevTouch.x;
 					float deltaY = (float) touch.y - prevTouch.y;
 
 					while ((Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10) && prevTouch.x != 0 && touch.id - prevTouch.id == 1) {
-						beerDrawer.draw(touch.texture, touch.x-deltaX/2, touch.y-deltaY/2);
-						beerDrawer.draw(touch.texture, prevTouch.x+deltaX/2, prevTouch.y+deltaY/2);
+						screenDrawer.draw(touch.texture, touch.x-deltaX/2, touch.y-deltaY/2);
+						screenDrawer.draw(touch.texture, prevTouch.x+deltaX/2, prevTouch.y+deltaY/2);
 						deltaX = Math.signum(deltaX)*Math.max(Math.abs(deltaX) - 2, 2);
 						deltaY = Math.signum(deltaY)*Math.max(Math.abs(deltaY) - 2, 2);
 					}
 				}
 				prevTouch = touch;
 
-				beerDrawer.draw(touch.texture, touch.x, touch.y);
-				beerDrawer.end();
+				screenDrawer.draw(touch.texture, touch.x, touch.y);
+				screenDrawer.end();
 			}
 		}
 	}
 
-	private void checkTouchHitboxes(Touch touch) {
+	private void checkHitboxes() {
 		for (Bottle beerBottle : generatedSprites.spawn(gameTimer)) {
-			double minX = beerBottle.getXOffset(gameTimer);
-			double minY = beerBottle.getYOffset(gameTimer);
+			Hitbox hitbox = beerBottle.getHitbox(gameTimer);
+			Touch touch;
+			if (currentTouchIndex > 0) {
+				touch = touches.get(currentTouchIndex-1);
+			}
+			else {
+				touch = touches.get(tailLength-1);
+			}
 
-			if (minX <= touch.x && touch.x <= minX + beerWidth) {
-				if (minY <= touch.y && touch.y <= minY + beerHeight) {
-					generatedSprites.caughtBottle(beerBottle.bottleId, minX);
+			// check touch hits with bottles
+			if (touch.display && hitbox.left <= touch.x && touch.x <= hitbox.right) {
+				if (hitbox.bottom <= touch.y && touch.y <= hitbox.top) {
+					generatedSprites.caughtBottle(beerBottle.bottleId, beerBottle.getXOffset(gameTimer), devMode);
 				}
+			}
+
+			// check bootle hitbox with other bottles
+			if (hitbox.left > 0 && hitbox.top > 0 && hitbox.left < screenWidth && hitbox.top < Gdx.graphics.getHeight()) {
+				for (Bottle compareBottle : generatedSprites.spawn(gameTimer)) {
+					Hitbox obstacle = compareBottle.getHitbox(gameTimer);
+
+					if (beerBottle != compareBottle && !beerBottle.collision) {
+						if (hitbox.right > obstacle.left && hitbox.left < obstacle.right) {
+							if (hitbox.top > obstacle.bottom && hitbox.bottom < obstacle.top) {
+								beerBottle.xStartPos = (int) beerBottle.getXOffset(gameTimer);
+								beerBottle.collision = true;
+							}
+						}
+					}
+				}
+			}
+
+			// draw the hitboxes in devMode
+			if (devMode) {
+				screenDrawer.begin();
+				screenDrawer.draw(hitboxTexture, (int) (hitbox.left), (int) (hitbox.top));
+				screenDrawer.draw(hitboxTexture, (int) (hitbox.right), (int) (hitbox.bottom));
+				screenDrawer.draw(hitboxTexture, (int) (hitbox.left), (int) (hitbox.bottom));
+				screenDrawer.draw(hitboxTexture, (int) (hitbox.right), (int) (hitbox.top));
+				screenDrawer.end();
 			}
 		}
 	}
 
 	public void gameOver() {
 		loading = false;
+		devMode = false;
 
-		beerDrawer.begin();
-		beerDrawer.draw(new Texture("gameOver.png"), 50, 500);
-		beerDrawer.end();
+		screenDrawer.begin();
+		screenDrawer.draw(gameOverTexture, 50, 500);
+		screenDrawer.end();
 
-		if (gameTimer > gameEndTime + 3) {
+		if (gameTimer > gameEndTime + 5) {
 			generatedSprites = null;
 		}
 	}
 	
 	@Override
 	public void dispose () {
-		beerDrawer.dispose();
+		screenDrawer.dispose();
 	}
 }

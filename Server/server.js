@@ -32,10 +32,14 @@ io.on("connection", (socket) => {
   socket.emit("socketID", { id: socket.id });
 
   socket.on("setUpGame", () => {
+    console.log("setUpGame");
     const tempPlayers = getPlayers();
     if (tempPlayers.player1 && tempPlayers.player2) {
       const player1ID = tempPlayers.player1.playerID;
       const player2ID = tempPlayers.player2.playerID;
+
+      setScore(player1ID, 0);
+      setScore(player2ID, 0);
 
       if (socket.id === player1ID) {
         socket.emit("setUpGame", { playerID: player1ID, enemyID: player2ID });

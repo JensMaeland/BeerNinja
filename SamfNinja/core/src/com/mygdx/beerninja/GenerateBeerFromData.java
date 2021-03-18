@@ -19,7 +19,6 @@ public class GenerateBeerFromData {
         socket = inputSocket;
 
         List<Bottle> inputBottles = new ArrayList<>();
-
         try {
             for (JSONObject spriteData : input) {
                     int bottleId = (int) spriteData.get("id");
@@ -28,7 +27,7 @@ public class GenerateBeerFromData {
                     String beerPlayer = (String) spriteData.get("playerID");
                     int bottleVelocity = (int) spriteData.get("velocity");
                     double bottleSpin = (double) spriteData.get("spin");
-                    Bottle bottle = new Bottle(bottleId, beerPlayer, yPos, bottleVelocity, bottleSpin, beerSpawnTime, Gdx.graphics.getHeight(), inputSocket.playerID);
+                    Bottle bottle = new Bottle(bottleId, beerPlayer, yPos, bottleVelocity, bottleSpin, beerSpawnTime, inputSocket.playerID);
                     inputBottles.add(bottle);
                 }
             } catch (JSONException e) {
@@ -55,22 +54,23 @@ public class GenerateBeerFromData {
             //beerPop.play();
         //}
 
-
         return currentBottles;
     }
 
-    public void caughtBottle(int id, double xPos) {
+    public void caughtBottle(int id, double xPos, boolean devMode) {
         float timestamp = System.currentTimeMillis();
         for (Bottle bottle : bottles) {
             if (bottle.bottleId == id) {
                 bottles.remove(bottle);
-                CaughtBottle caughtBottle = new CaughtBottle(id, timestamp, xPos, bottle.playerString);
+                CaughtBottle caughtBottle = new CaughtBottle(id, timestamp, xPos, bottle.bottlePlayerId);
                 socket.sendCaughtBottle(caughtBottle);
                 break;
             }
         }
 
+        if (!devMode) {
         Sound beerPop = Gdx.audio.newSound(Gdx.files.internal("break.mp3"));
         beerPop.play();
+        }
     }
 }

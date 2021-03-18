@@ -6,10 +6,10 @@ public class CaughtBottle {
     public double xcoor;
     public String playerID;
 
-    public CaughtBottle(int bottleId, double timestamp, double xPos, String player) {
+    public CaughtBottle(int bottleId, double timestamp, double xPos, String playerId) {
         id = bottleId;
         time = timestamp;
         xcoor = xPos;
-        playerID = player;
+        playerID = playerId;
     }
 }
