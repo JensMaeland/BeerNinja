@@ -127,6 +127,15 @@ public class SamfNinja extends ApplicationAdapter {
 			gameTimer = -gameCountDown;
 			loading = false;
 			System.out.println("Spillet starter..");
+
+			if (!devMode) {
+				// play sound to start off the game
+				Sound beerPop = Gdx.audio.newSound(Gdx.files.internal("crack.mp3"));
+				beerPop.play();
+				// play background music
+				Sound backgroundMusic = Gdx.audio.newSound(Gdx.files.internal("theMidnight.mp3"));
+				backgroundMusic.play();
+			}
 		}
 
 		screenDrawer.draw(homeScreen, 0, 0);
@@ -161,17 +170,6 @@ public class SamfNinja extends ApplicationAdapter {
 					socket.setUpGame(true);
 				}
 
-				// any game button clicked
-				if (screenY >= buttonsStartPos && screenY <= buttonsStartPos + 300) {
-					if (!devMode) {
-						// play sound to start off the game
-						Sound beerPop = Gdx.audio.newSound(Gdx.files.internal("crack.mp3"));
-						beerPop.play();
-						// play background music
-						Sound backgroundMusic = Gdx.audio.newSound(Gdx.files.internal("theMidnight.mp3"));
-						backgroundMusic.play();
-					}
-				}
 				return true;
 			};
 		});
