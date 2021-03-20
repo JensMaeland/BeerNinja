@@ -37,6 +37,8 @@ public class MainMenu {
             game.generatedSprites = socket.generateSprites();
             game.gameTimer = -gameCountDown;
             game.loading = false;
+            socket.getTouches(game.multiplayer);
+            socket.getPoints(game.multiplayer);
             System.out.println("Spillet starter..");
 
             if (!game.devMode) {

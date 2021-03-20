@@ -45,7 +45,7 @@ public class BeerSocket {
         parsedTouchData = new ArrayList<>();
     }
 
-    public void setUpGame(boolean multiplayer) {
+    public void setUpGame(final boolean multiplayer) {
         socket.emit("setUpGame", multiplayer);
         socket.on("setUpGame", new Emitter.Listener() {
             @Override
@@ -53,7 +53,9 @@ public class BeerSocket {
                 JSONObject receivedData = (JSONObject) args[0];
                 try {
                     playerID = receivedData.getString("playerID");
-                    enemyID = receivedData.getString("enemyID");
+                    if (multiplayer) {
+                        enemyID = receivedData.getString("enemyID");
+                    }
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
@@ -103,7 +105,9 @@ public class BeerSocket {
         }
     }
 
-    public void sendTouches(HashMap<Integer, Touch> myTouches, int currentTouchIndex) {
+    public void sendTouches(HashMap<Integer, Touch> myTouches, int currentTouchIndex, boolean multiplayer) {
+        if (!multiplayer) return;
+
         try {
             JSONObject tocuhObject = new JSONObject();
 
@@ -117,7 +121,9 @@ public class BeerSocket {
         }
     }
 
-    public void getTouches() {
+    public void getTouches(boolean multiplayer) {
+        if (!multiplayer) return;
+
         socket.on("touches", new Emitter.Listener() {
             @Override
             public void call(Object... args) {
@@ -152,14 +158,16 @@ public class BeerSocket {
         });
     }
 
-    public void getPoints() {
+    public void getPoints(final boolean multiplayer) {
         socket.on("getPoints", new Emitter.Listener() {
             @Override
             public void call(Object... args) {
                 JSONObject receivedData = (JSONObject) args[0];
                 try {
                     myPoints = receivedData.getInt(playerID);
-                    enemyPoints = receivedData.getInt(enemyID);
+                    if (multiplayer) {
+                        enemyPoints = receivedData.getInt(enemyID);
+                    }
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }

@@ -70,7 +70,7 @@ const createInitialPlayerState = () => {
 
 const generateListOfBeerObjects = (
   numberOfBeerObjects,
-  isSinglePlayer,
+  isMultiplayer,
   standardOffsetY = 800,
   standardVelocity = 350
 ) => {
@@ -79,7 +79,7 @@ const generateListOfBeerObjects = (
   console.log("Generating bottles..");
 
   for (i = 0; i < numberOfBeerObjects; i++) {
-    if (isSinglePlayer) {
+    if (!isMultiplayer) {
       playerID = players.player1.playerID;
     } else if (Math.random() > 0.5 && playerOne >= 1) {
       playerID = players.player1.playerID;

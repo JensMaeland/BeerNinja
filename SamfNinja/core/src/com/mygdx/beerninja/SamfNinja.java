@@ -48,8 +48,6 @@ public class SamfNinja extends ApplicationAdapter {
 		mainMenu = new MainMenu();
 		// connect the socket and receive generated sprites from the server
 		socket = new BeerSocket(tailLength);
-		socket.getTouches();
-		socket.getPoints();
 
 		// instancing objects for touch feature
 		for (int i = 0; i < tailLength; i++) {
@@ -76,7 +74,7 @@ public class SamfNinja extends ApplicationAdapter {
 			renderBeerSprites();
 			getAndRenderUserTouches();
 			checkHitboxes();
-			socket.sendTouches(touches, currentTouchIndex);
+			socket.sendTouches(touches, currentTouchIndex, multiplayer);
 		}
 		else {
 			gameOver();
