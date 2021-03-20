@@ -57,19 +57,21 @@ public class GenerateBeerFromData {
         return currentBottles;
     }
 
-    public void caughtBottle(CaughtBottle caughtBottle, boolean devMode) {
+    public void caughtBottle(CaughtBottle caughtBottle, boolean enemy, boolean devMode) {
         //float timestamp = System.currentTimeMillis();
         //caughtBottle.time = timestamp;
 
         for (Bottle bottle : bottles) {
             if (bottle.bottleId == caughtBottle.id) {
                 bottles.remove(bottle);
-                socket.sendCaughtBottle(caughtBottle);
+                if (!enemy) {
+                    socket.sendCaughtBottle(caughtBottle);
+                }
                 break;
             }
         }
 
-        if (!devMode) {
+        if (!devMode && !enemy) {
         Sound beerPop = Gdx.audio.newSound(Gdx.files.internal("break.mp3"));
         beerPop.play();
         }

@@ -3,7 +3,6 @@ package com.mygdx.beerninja;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputAdapter;
-import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -21,26 +20,29 @@ public class SamfNinja extends ApplicationAdapter {
 	MainMenu mainMenu;
 	BeerSocket socket;
 	GenerateBeerFromData generatedSprites = null;
-	HashMap<Integer, Touch> touches = new HashMap<>();
+	final HashMap<Integer, Touch> touches = new HashMap<>();
 	CaughtBottle latestCaughtBottle = null;
 	// variables;
 	boolean loading = false;
 	boolean multiplayer = true;
 	int currentTouchIndex = 0;
-
+	int screenWidth;
+	int screenHeight;
 	// game-settings as variables
-	boolean devMode = false; // set devmode for easier testing
+	boolean devMode = false; // set devMode for easier testing
 	double gameTimer = -2; // set seconds until game start
 	final double gameEndTime = 38; // set duration of each game
-	final double powerUpTimer = 20; // set when the powerUp shoud spawn
+	final double powerUpTimer = 20; // set when the powerUp should spawn
 	final int tailLength = 35; // set length of tail when touching the screen
-	final int screenWidth = 500; // set width of game screen
-	String backgroundImage = "map3.png"; // set which background-image should display
+	final String backgroundImage = "map3.png"; // set which background-image should display
 
 	@Override
 	public void create () {
 		// instancing a new batch drawer
 		screenDrawer = new SpriteBatch();
+		//
+		screenWidth = Gdx.graphics.getWidth();
+		screenHeight = Gdx.graphics.getHeight();
 		// instancing a new font drawer
 		font = new BitmapFont();
 		font.getData().setScale(2, 2);
@@ -97,11 +99,11 @@ public class SamfNinja extends ApplicationAdapter {
 
 		font.setColor(1,1,0.2F,1);
 		if (!multiplayer) {
-			font.draw(screenDrawer, "Poeng: " + socket.myPoints, 50, Gdx.graphics.getHeight() - 50);
+			font.draw(screenDrawer, "Poeng: " + socket.myPoints, 50, screenHeight - 50);
 		}
 		else {
-			font.draw(screenDrawer, "Meg: " + socket.myPoints, 50, Gdx.graphics.getHeight() - 50);
-			font.draw(screenDrawer, "P2: " + socket.enemyPoints, screenWidth-80, Gdx.graphics.getHeight() - 50);
+			font.draw(screenDrawer, "Meg: " + socket.myPoints, 50, screenHeight - 50);
+			font.draw(screenDrawer, "P2: " + socket.enemyPoints, screenWidth-80, screenHeight - 50);
 		}
 
 		if (latestCaughtBottle != null && latestCaughtBottle.time > gameTimer - 5 && !devMode) {
@@ -133,7 +135,7 @@ public class SamfNinja extends ApplicationAdapter {
 			public boolean touchDragged(int screenX, int screenY, int pointer) {
 				Touch touch = touches.get(currentTouchIndex);
 				touch.x = screenX;
-				touch.y = Gdx.graphics.getHeight() - screenY;
+				touch.y = screenHeight - screenY;
 				touch.time = gameTimer;
 				touch.display = true;
 				currentTouchIndex = (currentTouchIndex + 1) % tailLength;
@@ -187,37 +189,40 @@ public class SamfNinja extends ApplicationAdapter {
 	}
 
 	private void checkHitboxes() {
+		// get latest touch object for player and enemy
+		Touch touch = touches.get(tailLength-1);
+		Touch enemyTouch = socket.enemyTouches.get(tailLength-1);
+		if (currentTouchIndex > 0) {
+			touch = touches.get(currentTouchIndex-1);
+		}
+		if (socket.enemyTouchIndex > 0) {
+			enemyTouch = socket.enemyTouches.get(socket.enemyTouchIndex-1);
+		}
+
+		// check all bottle hitboxes
 		for (Bottle beerBottle : generatedSprites.spawn(gameTimer)) {
 			Hitbox hitbox = beerBottle.getHitbox(gameTimer, screenDrawer, devMode);
-			Touch touch;
-			if (currentTouchIndex > 0) {
-				touch = touches.get(currentTouchIndex-1);
-			}
-			else {
-				touch = touches.get(tailLength-1);
-			}
 
 			// check touch hits with bottles
 			if (touch.display && hitbox.left <= touch.x && touch.x <= hitbox.right) {
 				if (hitbox.bottom <= touch.y && touch.y <= hitbox.top) {
 					CaughtBottle caughtBottle = new CaughtBottle(beerBottle.bottleId, gameTimer, beerBottle.getXOffset(gameTimer), beerBottle.getYOffset(gameTimer), beerBottle.bottlePlayerId);
 					latestCaughtBottle = caughtBottle;
-					generatedSprites.caughtBottle(caughtBottle, devMode);
+					generatedSprites.caughtBottle(caughtBottle, false, devMode);
 				}
 			}
 
 			// check enemy touch hits with bottles
-			//Touch enemyTouch = lates timed touck
-			//if (touch.display && hitbox.left <= touch.x && touch.x <= hitbox.right) {
-			//	if (hitbox.bottom <= touch.y && touch.y <= hitbox.top) {
-			//		CaughtBottle caughtBottle = new CaughtBottle(beerBottle.bottleId, gameTimer, beerBottle.getXOffset(gameTimer), beerBottle.getYOffset(gameTimer), beerBottle.bottlePlayerId);
-			//		latestCaughtBottle = caughtBottle;
-			//		generatedSprites.caughtBottle(caughtBottle, devMode);
-			//	}
-			//}
+			if (enemyTouch.display && hitbox.left <= screenWidth-enemyTouch.x && screenWidth-enemyTouch.x <= hitbox.right) {
+				if (hitbox.bottom <= enemyTouch.y && enemyTouch.y <= hitbox.top) {
+					CaughtBottle caughtBottle = new CaughtBottle(beerBottle.bottleId, gameTimer, beerBottle.getXOffset(gameTimer), beerBottle.getYOffset(gameTimer), beerBottle.bottlePlayerId);
+					latestCaughtBottle = caughtBottle;
+					generatedSprites.caughtBottle(caughtBottle, true, devMode);
+				}
+			}
 
 			// check bottle hitbox with other bottles
-			if (hitbox.left > 0 && hitbox.top > 0 && hitbox.left < screenWidth && hitbox.top < Gdx.graphics.getHeight()) {
+			if (hitbox.left > 0 && hitbox.top > 0 && hitbox.left < screenWidth && hitbox.top < screenHeight) {
 				for (Bottle compareBottle : generatedSprites.spawn(gameTimer)) {
 					Hitbox obstacle = compareBottle.getHitbox(gameTimer, screenDrawer, devMode);
 

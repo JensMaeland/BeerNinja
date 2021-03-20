@@ -11,7 +11,6 @@ public class Touch {
     Texture texture;
     public boolean display;
     public double time;
-    boolean enemy;
 
     public Touch(int touchId, int screenX, int screenY, double timestamp, boolean enemy) {
         id = touchId;

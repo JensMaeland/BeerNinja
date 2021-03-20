@@ -45,7 +45,7 @@ public class BeerSocket {
         parsedTouchData = new ArrayList<>();
     }
 
-    public void setUpGame(final boolean multiplayer) {
+    public void setUpGame(boolean multiplayer) {
         socket.emit("setUpGame", multiplayer);
         socket.on("setUpGame", new Emitter.Listener() {
             @Override
@@ -53,7 +53,7 @@ public class BeerSocket {
                 JSONObject receivedData = (JSONObject) args[0];
                 try {
                     playerID = receivedData.getString("playerID");
-                        enemyID = receivedData.getString("enemyID");
+                    enemyID = receivedData.getString("enemyID");
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
@@ -129,10 +129,9 @@ public class BeerSocket {
                 parsedTouchData.clear();
 
                 try {
-                    JSONObject touchData = (JSONObject) receivedData.get("touches");
-
-                    String enemyTouchIndexString = (String) receivedData.get("currentTouchIndex");
-                    enemyTouchIndex = Integer.parseInt(enemyTouchIndexString);
+                    String touchDataString = (String) receivedData.get("touches");
+                    JSONObject touchData = new JSONObject(touchDataString);
+                    enemyTouchIndex = receivedData.getInt("currentTouchIndex");
 
                     for (int i = 0; i< touchData.length(); i++){
                         JSONObject touch = (JSONObject) touchData.get(Integer.toString(i));
@@ -162,7 +161,9 @@ public class BeerSocket {
                 JSONObject receivedData = (JSONObject) args[0];
                 try {
                     myPoints = receivedData.getInt(playerID);
+                    if (!enemyID.equals("null")) {
                         enemyPoints = receivedData.getInt(enemyID);
+                    }
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }

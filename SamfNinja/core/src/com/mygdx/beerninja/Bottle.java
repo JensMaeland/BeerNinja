@@ -17,7 +17,6 @@ public class Bottle extends ApplicationAdapter {
     Integer bottleVelocity;
     double bottleSpin;
     boolean collision;
-    final int screenWidth = 500;
     Hitbox hitbox;
 
     public Bottle(int id, String bottlePlayer, int y, int velocity, double spin, double spawnTime, String myPlayer) {
@@ -53,7 +52,7 @@ public class Bottle extends ApplicationAdapter {
             return -margin;
         }
         else {
-            return screenWidth + margin;
+            return Gdx.graphics.getHeight() + margin;
         }
     }
 

@@ -74,11 +74,10 @@ io.on("connection", (socket) => {
   });
   socket.on("touches", (touches) => {
     let tempPlayers = getPlayers();
-    console.log(touches)
     if (socket.id == tempPlayers.player1.playerID) {
-      io.to(tempPlayers.player2.playerID).emit("touches", { touches: touches });
+      io.to(tempPlayers.player2.playerID).emit("touches", touches);
     } else if (socket.id == tempPlayers.player2.playerID) {
-      io.to(tempPlayers.player1.playerID).emit("touches", { touches: touches });
+      io.to(tempPlayers.player1.playerID).emit("touches", touches);
     }
   });
 
