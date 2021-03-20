@@ -53,9 +53,7 @@ public class BeerSocket {
                 JSONObject receivedData = (JSONObject) args[0];
                 try {
                     playerID = receivedData.getString("playerID");
-                    if (multiplayer) {
                         enemyID = receivedData.getString("enemyID");
-                    }
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
@@ -157,16 +155,14 @@ public class BeerSocket {
         });
     }
 
-    public void getPoints(final boolean multiplayer) {
+    public void getPoints() {
         socket.on("getPoints", new Emitter.Listener() {
             @Override
             public void call(Object... args) {
                 JSONObject receivedData = (JSONObject) args[0];
                 try {
                     myPoints = receivedData.getInt(playerID);
-                    if (multiplayer) {
                         enemyPoints = receivedData.getInt(enemyID);
-                    }
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
