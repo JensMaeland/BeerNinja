@@ -30,33 +30,49 @@ httpServer.listen(8080, () => {
 });
 
 io.on("connection", (socket) => {
-
+  console.log("Player connected: " + socket.id);
   socket.emit("socketID", { id: socket.id });
 
-  socket.on("setUpGame", () => {
+  socket.on("setUpGame", (multiplayer) => {
+    console.log(multiplayer);
     addPlayer(socket, testmode);
-
-    generatedBottlelist = generateListOfBeerObjects(30, isSinglePlayer);
     console.log(socket.id + " joined..");
+
     let tempPlayers = getPlayers();
-    if (tempPlayers.player1 && tempPlayers.player2 && tempPlayers.player1.playerID && tempPlayers.player2.playerID) {
-      console.log("starting game")
-      const player1ID = tempPlayers.player1.playerID;
-      const player2ID = tempPlayers.player2.playerID;
 
-      setScore(player1ID, 0);
-      setScore(player2ID, 0);
+    if (multiplayer) {
+      if (tempPlayers.player1 && tempPlayers.player2 && tempPlayers.player1.playerID && tempPlayers.player2.playerID) {
+        console.log("starting game")
 
-      if (socket.id === player1ID) {
-        socket.emit("setUpGame", { playerID: player1ID, enemyID: player2ID });
-        socket.to(player2ID).emit("setUpGame", { playerID: player2ID, enemyID: player1ID });
-      } else if (socket.id === player2ID) {
-        socket.to(player1ID).emit("setUpGame", { playerID: player1ID, enemyID: player2ID });
-        socket.emit("setUpGame", { playerID: player2ID, enemyID: player1ID });
+        generatedBottlelist = generateListOfBeerObjects(30, multiplayer);
+
+        const player1ID = tempPlayers.player1.playerID;
+        const player2ID = tempPlayers.player2.playerID;
+
+        setScore(player1ID, 0);
+        setScore(player2ID, 0);
+
+        if (socket.id === player1ID) {
+          socket.emit("setUpGame", { playerID: player1ID, enemyID: player2ID });
+          socket.to(player2ID).emit("setUpGame", { playerID: player2ID, enemyID: player1ID });
+        } else if (socket.id === player2ID) {
+          socket.to(player1ID).emit("setUpGame", { playerID: player1ID, enemyID: player2ID });
+          socket.emit("setUpGame", { playerID: player2ID, enemyID: player1ID });
+        }
+      }
+      else {
+        console.log("waiting for player 2..")
       }
     }
     else {
-      console.log("waiting for player 2..")
+      console.log("starting game");
+
+      generatedBottlelist = generateListOfBeerObjects(30, multiplayer);
+
+      const player1ID = tempPlayers.player1.playerID;
+      setScore(player1ID, 0);
+
+      socket.emit("setUpGame", { playerID: player1ID });
     }
   });
   socket.on("touches", (touches) => {
