@@ -109,13 +109,13 @@ public class BeerSocket {
         if (!multiplayer) return;
 
         try {
-            JSONObject tocuhObject = new JSONObject();
+            JSONObject touchObject = new JSONObject();
 
             String touches = mapper.writeValueAsString(myTouches);
-            tocuhObject.put("touches", touches);
-            tocuhObject.put("currentTouchIndex", currentTouchIndex);
+            touchObject.put("touches", touches);
+            touchObject.put("currentTouchIndex", currentTouchIndex);
 
-            socket.emit("touches", tocuhObject);
+            socket.emit("touches", touchObject);
         } catch (JsonProcessingException | JSONException e) {
             e.printStackTrace();
         }
@@ -131,8 +131,7 @@ public class BeerSocket {
                 parsedTouchData.clear();
 
                 try {
-                    String touchDataString = (String) receivedData.get("touches");
-                    JSONObject touchData = new JSONObject(touchDataString);
+                    JSONObject touchData = (JSONObject) receivedData.get("touches");
 
                     String enemyTouchIndexString = (String) receivedData.get("currentTouchIndex");
                     enemyTouchIndex = Integer.parseInt(enemyTouchIndexString);

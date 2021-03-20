@@ -39,12 +39,11 @@ io.on("connection", (socket) => {
     console.log(socket.id + " joined..");
 
     let tempPlayers = getPlayers();
+    generatedBottlelist = generateListOfBeerObjects(30, multiplayer);
 
     if (multiplayer) {
       if (tempPlayers.player1 && tempPlayers.player2 && tempPlayers.player1.playerID && tempPlayers.player2.playerID) {
         console.log("starting game")
-
-        generatedBottlelist = generateListOfBeerObjects(30, multiplayer);
 
         const player1ID = tempPlayers.player1.playerID;
         const player2ID = tempPlayers.player2.playerID;
@@ -67,17 +66,15 @@ io.on("connection", (socket) => {
     else {
       console.log("starting game");
 
-      generatedBottlelist = generateListOfBeerObjects(30, multiplayer);
-
       const player1ID = tempPlayers.player1.playerID;
       setScore(player1ID, 0);
 
-      socket.emit("setUpGame", { playerID: player1ID });
+      socket.emit("setUpGame", { playerID: player1ID, enemyID: null });
     }
   });
   socket.on("touches", (touches) => {
     let tempPlayers = getPlayers();
-    console.log("sending touches..")
+    console.log(touches)
     if (socket.id == tempPlayers.player1.playerID) {
       io.to(tempPlayers.player2.playerID).emit("touches", { touches: touches });
     } else if (socket.id == tempPlayers.player2.playerID) {
