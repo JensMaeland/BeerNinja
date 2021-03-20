@@ -14,23 +14,23 @@ public class SamfNinja extends ApplicationAdapter {
 	// imported help-classes
 	SpriteBatch screenDrawer;
 	Texture background;
-	Texture homeScreen;
-	Texture loadingScreen;
 	Texture gameOverTexture;
 	Texture splash;
 	BitmapFont font;
 	// our own help-classes
+	MainMenu mainMenu;
 	BeerSocket socket;
 	GenerateBeerFromData generatedSprites = null;
 	HashMap<Integer, Touch> touches = new HashMap<>();
 	CaughtBottle latestCaughtBottle = null;
 	// variables;
-	private boolean loading = false;
+	boolean loading = false;
+	boolean multiplayer = true;
 	int currentTouchIndex = 0;
 
 	// game-settings as variables
-	private boolean devMode = false; // set devmode for easier testing
-	private double gameTimer = -2; // set seconds until game start
+	boolean devMode = false; // set devmode for easier testing
+	double gameTimer = -2; // set seconds until game start
 	final double gameEndTime = 38; // set duration of each game
 	final double powerUpTimer = 20; // set when the powerUp shoud spawn
 	final int tailLength = 35; // set length of tail when touching the screen
@@ -41,10 +41,11 @@ public class SamfNinja extends ApplicationAdapter {
 	public void create () {
 		// instancing a new batch drawer
 		screenDrawer = new SpriteBatch();
-
 		// instancing a new font drawer
 		font = new BitmapFont();
 		font.getData().setScale(2, 2);
+		// instancing the main menu
+		mainMenu = new MainMenu();
 		// connect the socket and receive generated sprites from the server
 		socket = new BeerSocket(tailLength);
 		socket.getTouches();
@@ -57,8 +58,6 @@ public class SamfNinja extends ApplicationAdapter {
 
 		// setting textures to correct images
 		background = new Texture(backgroundImage);
-		homeScreen = new Texture("home2.png");
-		loadingScreen = new Texture("loading.png");
 		gameOverTexture = new Texture("gameOver.png");
 		splash = new Texture("splash.png");
 	}
@@ -66,7 +65,7 @@ public class SamfNinja extends ApplicationAdapter {
 	@Override
 	public void render () {
 		if (generatedSprites == null) {
-			mainMenu();
+			mainMenu.renderMainMenu(this, socket, screenDrawer);
 			return;
 		}
 
@@ -77,7 +76,7 @@ public class SamfNinja extends ApplicationAdapter {
 			renderBeerSprites();
 			getAndRenderUserTouches();
 			checkHitboxes();
-			socket.sendTouches(touches);
+			socket.sendTouches(touches, currentTouchIndex);
 		}
 		else {
 			gameOver();
@@ -99,8 +98,14 @@ public class SamfNinja extends ApplicationAdapter {
 		screenDrawer.setColor(1F, 1F, 1F, 1F);
 
 		font.setColor(1,1,0.2F,1);
-		font.draw(screenDrawer, "Meg: " + socket.myPoints, 50, Gdx.graphics.getHeight() - 50);
-		font.draw(screenDrawer, "P2: " + socket.enemyPoints, screenWidth-80, Gdx.graphics.getHeight() - 50);
+		if (!multiplayer) {
+			font.draw(screenDrawer, "Poeng: " + socket.myPoints, 50, Gdx.graphics.getHeight() - 50);
+		}
+		else {
+			font.draw(screenDrawer, "Meg: " + socket.myPoints, 50, Gdx.graphics.getHeight() - 50);
+			font.draw(screenDrawer, "P2: " + socket.enemyPoints, screenWidth-80, Gdx.graphics.getHeight() - 50);
+		}
+
 		if (latestCaughtBottle != null && latestCaughtBottle.time > gameTimer - 5 && !devMode) {
 			brightness = (float) (1.0-(gameTimer - latestCaughtBottle.time));
 			screenDrawer.setColor(brightness, brightness, brightness, brightness);
@@ -108,71 +113,6 @@ public class SamfNinja extends ApplicationAdapter {
 			screenDrawer.setColor(1F, 1F, 1F, 1F);
 		}
 		screenDrawer.end();
-	}
-
-	public void mainMenu () {
-		screenDrawer.begin();
-		final int gameCountDown = 2;
-		final int buttonsStartPos = 515;
-
-		if (loading) {
-			if (socket.playerID == null || socket.enemyID == null) {
-				screenDrawer.draw(loadingScreen, 0, 0);
-				screenDrawer.end();
-				System.out.println("Venter på motspiller..");
-				return;
-			}
-
-			generatedSprites = socket.generateSprites();
-			gameTimer = -gameCountDown;
-			loading = false;
-			System.out.println("Spillet starter..");
-
-			if (!devMode) {
-				// play sound to start off the game
-				Sound beerPop = Gdx.audio.newSound(Gdx.files.internal("crack.mp3"));
-				beerPop.play();
-				// play background music
-				Sound backgroundMusic = Gdx.audio.newSound(Gdx.files.internal("theMidnight.mp3"));
-				backgroundMusic.play();
-			}
-		}
-
-		screenDrawer.draw(homeScreen, 0, 0);
-		screenDrawer.end();
-
-		Gdx.input.setInputProcessor(new InputAdapter(){
-			@Override
-			public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-				// game button clicked
-				if (screenY >= buttonsStartPos && screenY <= buttonsStartPos + 300) {
-					loading = true;
-				}
-				// dev game clicked
-				if (screenY >= buttonsStartPos + 200 && screenY <= buttonsStartPos + 300) {
-					devMode = true;
-				}
-				return true;
-			}
-
-			@Override
-			public boolean touchUp(int screenX, int screenY, int pointer, int button) {
-				// multiplayer game clicked
-				if (screenY >= buttonsStartPos && screenY <= buttonsStartPos + 100) {
-					socket.setUpGame(true);
-				}
-				// solo game clicked
-				else if (screenY >= buttonsStartPos + 100 && screenY <= buttonsStartPos + 200) {
-					socket.setUpGame(false);
-				}
-				// dev game clicked
-				else if (screenY >= buttonsStartPos + 200 && screenY <= buttonsStartPos + 300) {
-					socket.setUpGame(true);
-				}
-
-				return true;
-			};
-		});
 	}
 
 	private void renderBeerSprites() {
@@ -237,11 +177,13 @@ public class SamfNinja extends ApplicationAdapter {
 		}
 
 		// render enemy touches
-		for (Touch touch : socket.enemyTouches.values()) {
-			if (touch.display) {
-				screenDrawer.begin();
-				screenDrawer.draw(touch.texture, screenWidth-touch.x, touch.y);
-				screenDrawer.end();
+		if (multiplayer) {
+			for (Touch touch : socket.enemyTouches.values()) {
+				if (touch.display) {
+					screenDrawer.begin();
+					screenDrawer.draw(touch.texture, screenWidth-touch.x, touch.y);
+					screenDrawer.end();
+				}
 			}
 		}
 	}

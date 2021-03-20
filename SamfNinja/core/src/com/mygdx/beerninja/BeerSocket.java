@@ -20,10 +20,10 @@ public class BeerSocket {
     String enemyID = null;
     int myPoints;
     int enemyPoints;
+    int enemyTouchIndex;
     HashMap<Integer, Touch> enemyTouches = new HashMap<>();
     private Socket socket;
     JSONArray bottleData;
-    JSONObject touchData;
     ArrayList<JSONObject> parsedBottleData;
     ArrayList<JSONObject> parsedTouchData;
     String socketUrl = "http://localhost:8080";
@@ -103,11 +103,16 @@ public class BeerSocket {
         }
     }
 
-    public void sendTouches(HashMap<Integer, Touch> myTouches) {
+    public void sendTouches(HashMap<Integer, Touch> myTouches, int currentTouchIndex) {
         try {
-            String json = mapper.writeValueAsString(myTouches);
-            socket.emit("touches", json);
-        } catch (JsonProcessingException e) {
+            JSONObject tocuhObject = new JSONObject();
+
+            String touches = mapper.writeValueAsString(myTouches);
+            tocuhObject.put("touches", touches);
+            tocuhObject.put("currentTouchIndex", currentTouchIndex);
+
+            socket.emit("touches", tocuhObject);
+        } catch (JsonProcessingException | JSONException e) {
             e.printStackTrace();
         }
     }
@@ -122,6 +127,9 @@ public class BeerSocket {
                 try {
                     String touchDataString = (String) receivedData.get("touches");
                     JSONObject touchData = new JSONObject(touchDataString);
+
+                    String enemyTouchIndexString = (String) receivedData.get("currentTouchIndex");
+                    enemyTouchIndex = Integer.parseInt(enemyTouchIndexString);
 
                     for (int i = 0; i< touchData.length(); i++){
                         JSONObject touch = (JSONObject) touchData.get(Integer.toString(i));
