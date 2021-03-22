@@ -12,7 +12,6 @@ import io.socket.client.Socket;
 import io.socket.emitter.Emitter;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class BeerSocket {
@@ -26,7 +25,8 @@ public class BeerSocket {
     JSONArray bottleData;
     ArrayList<JSONObject> parsedBottleData;
     ArrayList<JSONObject> parsedTouchData;
-    String socketUrl = "http://localhost:8080";
+    //String socketUrl = "http://46.101.52.4:8080";
+    String socketUrl = "http://192.168.10.120:8080";
     ObjectMapper mapper;
 
     public BeerSocket(int tailLength) {

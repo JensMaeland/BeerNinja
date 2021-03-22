@@ -94,7 +94,7 @@ public class SamfNinja extends ApplicationAdapter {
 
 		screenDrawer.begin();
 		screenDrawer.setColor(brightness, brightness, 1F, 1F);
-		screenDrawer.draw(background, 0, 0);
+		screenDrawer.draw(background, 0, 0, screenWidth, screenHeight);
 		screenDrawer.setColor(1F, 1F, 1F, 1F);
 
 		font.setColor(1,1,0.2F,1);
@@ -116,6 +116,7 @@ public class SamfNinja extends ApplicationAdapter {
 	}
 
 	private void renderBeerSprites() {
+		int scale = 1;
 		for (Bottle beerBottle : generatedSprites.spawn(gameTimer)) {
 			float x = (float) beerBottle.getXOffset(gameTimer);
 			float y = (float) beerBottle.getYOffset(gameTimer);
@@ -123,7 +124,7 @@ public class SamfNinja extends ApplicationAdapter {
 			int height = beerBottle.beerTexture.getRegionHeight();
 
 			screenDrawer.begin();
-			screenDrawer.draw(beerBottle.beerTexture, x, y, width/2F, height/2F, width, height, 1, 1, (float) beerBottle.getSpin(gameTimer));
+			screenDrawer.draw(beerBottle.beerTexture, x, y, (width*scale)/2F, (height*scale)/2F, width, height, scale, scale, (float) beerBottle.getSpin(gameTimer));
 			screenDrawer.end();
 		}
 	}

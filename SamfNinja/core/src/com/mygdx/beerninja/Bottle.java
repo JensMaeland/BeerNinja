@@ -52,7 +52,7 @@ public class Bottle extends ApplicationAdapter {
             return -margin;
         }
         else {
-            return Gdx.graphics.getHeight() + margin;
+            return Gdx.graphics.getWidth() + margin;
         }
     }
 
@@ -79,8 +79,9 @@ public class Bottle extends ApplicationAdapter {
     }
 
     public Hitbox getHitbox(double gameTime, SpriteBatch screenDrawer, boolean devMode) {
-        int beerWidth = beerTexture.getRegionWidth();
-        int beerHeight = beerTexture.getRegionHeight();
+        int scale = Gdx.graphics.getHeight() / 1000;
+        int beerWidth = beerTexture.getRegionWidth() * scale;
+        int beerHeight = beerTexture.getRegionHeight() * scale;
 
         double minX = getXOffset(gameTime);
         double minY = getYOffset(gameTime);

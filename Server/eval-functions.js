@@ -1,41 +1,46 @@
-const { json } = require("express");
+const { Beer } = require("./beer");
+const { Player } = require("./player");
 
-//(numberOfSprites wants to spawn, id of player)
-class Player {
-  playerID = "";
-  score = 0;
-  bottles = [];
+const numberOfBeerObjects = 30;
+
+const state = {
+  players: {},
+  bottleList: []
 }
 
-class Beer {
-  //   int,     float,        int,      string,       int, float
-  constructor(id, secondsToSpawn, offsetY, playerID, velocity, spin) {
-    this.id = id;
-    this.secondsToSpawn = secondsToSpawn;
-    this.offsetY = offsetY;
-    this.playerID = playerID;
-    this.velocity = velocity;
-    this.spin = spin;
+const getPlayers = () => state.players;
+const getBottleList = () => state.bottleList;
+const getPlayer = playerID => state.players[playerID];
+
+const createInitialState = () => {
+  players = {};
+  bottleList = [];
+};
+
+const addPlayer = playerID => {
+  const enemy = Object.values(state.players).filter(p => p.enemyID === "");
+
+  let player;
+  if (enemy.length) {
+    player = new Player(playerID, enemy[0].playerID);
+    state.players[playerID] = player;
+    enemy[0].enemyID = playerID;
   }
-}
+  else {
+    player = new Player(playerID);
+    state.players[playerID] = player;
+  }
 
-let players = {};
-
-const getPlayers = () => players;
+  return player;
+};
 
 const isBottleInOpponentsList = (playerID, bottle) => {
   jsonBottle = JSON.parse(bottle);
-  if (players.player1.playerID == playerID) {
-    for (let alreadyCaughtBottle of players.player2.bottles) {
-      if (alreadyCaughtBottle.id == jsonBottle.id) {
-        return true;
-      }
-    }
-  } else if (players.player2.playerID == playerID) {
-    for (let alreadyCaughtBottle of players.player1.bottles) {
-      if (alreadyCaughtBottle.id == jsonBottle.id) {
-        return true;
-      }
+  const player = getPlayer(playerID);
+
+  for (let alreadyCaughtBottle of player.bottles) {
+    if (alreadyCaughtBottle.id == jsonBottle.id) {
+      return true;
     }
   }
   return false;
@@ -43,34 +48,19 @@ const isBottleInOpponentsList = (playerID, bottle) => {
 
 const appendBottle = (playerID, bottle) => {
   jsonBottle = JSON.parse(bottle);
-  if (players.player1.playerID == playerID) {
-    players.player1.bottles.push(jsonBottle);
-  } else if (players.player2.playerID == playerID) {
-    players.player2.bottles.push(jsonBottle);
-  }
+  const player = getPlayer(playerID);
+
+  player.bottles.push(jsonBottle);
 };
 
 const setScore = (playerID, score) => {
-  if (players.player1.playerID == playerID) {
-    players.player1.score += score;
-  } else if (players.player2.playerID == playerID) {
-    players.player2.score += score;
-  }
-  return players;
-};
-
-const createInitialPlayerState = () => {
-  const player1 = new Player();
-  const player2 = new Player();
-  players = {
-    player1,
-    player2,
-  };
+  const player = getPlayer(playerID);
+  player.score += score;
 };
 
 const generateListOfBeerObjects = (
-  numberOfBeerObjects,
   isMultiplayer,
+  player,
   standardOffsetY = 800,
   standardVelocity = 350
 ) => {
@@ -78,14 +68,16 @@ const generateListOfBeerObjects = (
   var playerOne = Math.floor(numberOfBeerObjects / 2);
   console.log("Generating bottles..");
 
+  let playerID;
+
   for (i = 0; i < numberOfBeerObjects; i++) {
     if (!isMultiplayer) {
-      playerID = players.player1.playerID;
-    } else if (Math.random() > 0.5 && playerOne >= 1) {
-      playerID = players.player1.playerID;
+      playerID = player.playerID;
+    } else if (Math.random() > 0.5 && playerOne) {
+      playerID = player.playerID;
       playerOne--;
     } else {
-      playerID = players.player2.playerID;
+      playerID = player.enemyID;
     }
 
     //Creates new beer object
@@ -104,51 +96,35 @@ const generateListOfBeerObjects = (
     );
   }
 
-  return spriteList;
+  state.bottleList = spriteList;
 };
 
 /*
 Funksjonen tar inn en flaske, og returnerer spilleren som skal få et poeng. 
 
  */
-const getWinningPlayerV2 = (bottle) => {
+const getWinningPlayerV2 = bottle => {
   jsonBottle = JSON.parse(bottle);
-  if (jsonBottle.playerID == players.player1.playerID) {
-    return players.player1.playerID;
-  } else if (jsonBottle.playerID == players.player2.playerID) {
-    return players.player2.playerID;
-  }
+
+  const player = getPlayer(jsonBottle.playerID);
+  return player.playerID;
 };
 
-const pushBottleToCorrectPlayer = (bottle) => {
-  if (bottle.playerID == players.player1.playerID) {
-    players.player1.bottles.push(bottle);
-  } else if (bottle.playerID == players.player2.playerID) {
-    players.player2.bottles.push(bottle);
-  }
-};
+const pushBottleToCorrectPlayer = bottle => {
+  const player = getPlayer(bottle.playerID);
 
-const addPlayer = (socket, testMode = false) => {
-  if (!players.player1 && !players.player2) {
-    createInitialPlayerState();
-  }
-
-  if (!players.player1.playerID) {
-    players.player1.playerID = socket.id;
-
-    if (testMode) players.player2.playerID = "testplayer_2";
-  } else if (!players.player2.playerID) {
-    players.player2.playerID = socket.id;
-  }
+  player.bottles.push(bottle);
 };
 
 module.exports = {
   generateListOfBeerObjects,
   getWinningPlayerV2,
   addPlayer,
-  createInitialPlayerState,
+  createInitialState,
   pushBottleToCorrectPlayer,
   getPlayers,
+  getPlayer,
+  getBottleList,
   setScore,
   appendBottle,
   isBottleInOpponentsList,

@@ -5,128 +5,101 @@ const {
   isBottleInOpponentsList,
   allocatePoints,
   appendBottle,
-  createInitialPlayerState,
+  createInitialState,
   pushBottleToCorrectPlayer,
+  getBottleList,
   getPlayers,
+  getPlayer,
   setScore,
 } = require("./eval-functions");
 
 const app = require("express")();
 const httpServer = require("http").createServer(app);
-const options = {
-  /*  */
-};
-const io = require("socket.io")(httpServer, options);
+const io = require("socket.io")(httpServer, {});
 
-// lets user play agains an idle player2
-const testmode = false;
-
-isSinglePlayer = false;
-let generatedBottleList = [];
+const port = 8080;
 
 /*Server now listens to port 8080*/
-httpServer.listen(8080, () => {
-  console.log("server is now running");
+httpServer.listen(port, () => {
+  console.log("Server up and running..");
 });
 
 io.on("connection", (socket) => {
   console.log("Player connected: " + socket.id);
-  socket.emit("socketID", { id: socket.id });
+  //socket.emit("socketID", { id: socket.id });
 
   socket.on("setUpGame", (multiplayer) => {
-    console.log(multiplayer);
-    addPlayer(socket, testmode);
-    console.log(socket.id + " joined..");
+    // add player to game
+    const player = addPlayer(socket.id);
 
-    let tempPlayers = getPlayers();
-    generatedBottlelist = generateListOfBeerObjects(30, multiplayer);
+    let players = getPlayers();
+    console.log(players);
+
+    if (player.enemyID) {
+      generateListOfBeerObjects(multiplayer, player);
+    }
+
+    console.log("Requested game: " + socket.id);
 
     if (multiplayer) {
-      if (tempPlayers.player1 && tempPlayers.player2 && tempPlayers.player1.playerID && tempPlayers.player2.playerID) {
-        console.log("starting game")
+      if (player.enemyID) {
+        console.log("Starting game")
 
-        const player1ID = tempPlayers.player1.playerID;
-        const player2ID = tempPlayers.player2.playerID;
+        setScore(player.playerID, 0);
+        setScore(player.enemyID, 0);
 
-        setScore(player1ID, 0);
-        setScore(player2ID, 0);
-
-        if (socket.id === player1ID) {
-          socket.emit("setUpGame", { playerID: player1ID, enemyID: player2ID });
-          socket.to(player2ID).emit("setUpGame", { playerID: player2ID, enemyID: player1ID });
-        } else if (socket.id === player2ID) {
-          socket.to(player1ID).emit("setUpGame", { playerID: player1ID, enemyID: player2ID });
-          socket.emit("setUpGame", { playerID: player2ID, enemyID: player1ID });
-        }
+        socket.emit("setUpGame", { playerID: player.playerID, enemyID: player.enemyID });
+        socket.to(player.enemyID).emit("setUpGame", { playerID: player.enemyID, enemyID: player.playerID });
       }
       else {
-        console.log("waiting for player 2..")
+        console.log("Waiting for player 2..")
       }
     }
     else {
-      console.log("starting game");
+      console.log("Starting solo game");
 
-      const player1ID = tempPlayers.player1.playerID;
-      setScore(player1ID, 0);
-
-      socket.emit("setUpGame", { playerID: player1ID, enemyID: null });
+      setScore(player.playerID, 0);
+      socket.emit("setUpGame", { playerID: player.playerID, enemyID: null });
     }
   });
+
   socket.on("touches", (touches) => {
-    let tempPlayers = getPlayers();
-    if (socket.id == tempPlayers.player1.playerID) {
-      io.to(tempPlayers.player2.playerID).emit("touches", touches);
-    } else if (socket.id == tempPlayers.player2.playerID) {
-      io.to(tempPlayers.player1.playerID).emit("touches", touches);
-    }
+    let player = getPlayer(socket.id);
+
+    io.to(player.enemyID).emit("touches", touches);
   });
 
-  socket.on("bottleList", () =>
+  socket.on("bottleList", () => {
     socket.emit("bottleList", {
-      bottleList: generatedBottlelist,
+      bottleList: getBottleList(),
     })
+  }
   );
 
   socket.on("caughtBottle", (bottle) => {
     console.log("Caught Bottle : ", bottle);
-    let tempPlayers = getPlayers();
+    let player = getPlayer(socket.id);
 
     // Returnerer bottle.playerID
     var winner = getWinningPlayerV2(bottle);
     console.log("Winner: ", winner);
-    if (winner == tempPlayers.player1.playerID) {
-      if (!isBottleInOpponentsList(tempPlayers.player1.playerID, bottle)) {
-        appendBottle(tempPlayers.player1.playerID, bottle);
-        tempPlayers = setScore(winner, 1);
-      }
-    } else if (winner == tempPlayers.player2.playerID) {
-      if (!isBottleInOpponentsList(tempPlayers.player2.playerID, bottle)) {
-        appendBottle(tempPlayers.player2.playerID, bottle);
-        tempPlayers = setScore(winner, 1);
-      }
+
+    if (!isBottleInOpponentsList(winner, bottle)) {
+      appendBottle(winner, bottle);
+      setScore(winner, 1);
     }
 
-    //console.log("Updated Players :", tempPlayers);
+    player = getPlayer(player.playerID);
+    const enemy = getPlayer(player.enemyID);
 
-    const player1ID = tempPlayers.player1.playerID;
-    const player2ID = tempPlayers.player2.playerID;
-    const player1Score = tempPlayers.player1.score;
-    const player2Score = tempPlayers.player2.score;
-    //console.log(tempPlayers);
-    /*
-    console.log(player1ID);
-    console.log(player2ID);
-    console.log(player1Score);
-    console.log(player1Score);
-*/
     socket.emit("getPoints", {
-      [player1ID]: player1Score,
-      [player2ID]: player2Score,
+      [player.playerID]: player.score,
+      [enemy.playerID]: enemy.score,
     });
   });
 
   socket.on("disconnect", function (socket) {
-    createInitialPlayerState();
+    createInitialState();
 
     console.log("Player Disconnected");
   });

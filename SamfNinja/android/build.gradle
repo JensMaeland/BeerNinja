@@ -18,7 +18,7 @@ android {
     }
     defaultConfig {
         applicationId "com.mygdx.beerninja"
-        minSdkVersion 14
+        minSdkVersion 24
         targetSdkVersion 30
         versionCode 1
         versionName "1.0"
@@ -29,7 +29,9 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
-}
+
+
+    }
 
 
 // called every time gradle gets executed, takes the native dependencies of

@@ -18,17 +18,17 @@ public class MainMenu {
     public void renderMainMenu (final SamfNinja game, final BeerSocket socket, SpriteBatch screenDrawer) {
         screenDrawer.begin();
         final int gameCountDown = 2;
-        final int buttonsStartPos = 515;
+        final int buttonsStartPos = Gdx.graphics.getHeight() / 2;
 
         if (game.loading) {
             if (game.multiplayer && socket.enemyID == null) {
-                screenDrawer.draw(loadingScreen, 0, 0);
+                screenDrawer.draw(loadingScreen, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
                 screenDrawer.end();
                 System.out.println("Venter på motspiller..");
                 return;
             }
             else if (!game.multiplayer && socket.playerID == null) {
-                screenDrawer.draw(loadingScreen, 0, 0);
+                screenDrawer.draw(loadingScreen, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
                 screenDrawer.end();
                 System.out.println("Setter opp spill..");
                 return;
@@ -51,15 +51,15 @@ public class MainMenu {
             }
         }
 
-        screenDrawer.draw(homeScreen, 0, 0);
+        screenDrawer.draw(homeScreen, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         screenDrawer.end();
 
         Gdx.input.setInputProcessor(new InputAdapter(){
             @Override
             public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-                boolean multiplayerButton = screenY >= buttonsStartPos && screenY <= buttonsStartPos + 100;
-                boolean soloGameButton = screenY >= buttonsStartPos + 100 && screenY <= buttonsStartPos + 200;
-                boolean devModeButton = screenY >= buttonsStartPos + 200 && screenY <= buttonsStartPos + 300;
+                boolean multiplayerButton = screenY >= buttonsStartPos && screenY <= buttonsStartPos + 200;
+                boolean soloGameButton = screenY >= buttonsStartPos + 200 && screenY <= buttonsStartPos + 400;
+                boolean devModeButton = screenY >= buttonsStartPos + 400 && screenY <= buttonsStartPos + 600;
 
                 // game button clicked
                 if (multiplayerButton || soloGameButton) {
@@ -75,9 +75,9 @@ public class MainMenu {
 
             @Override
             public boolean touchUp(int screenX, int screenY, int pointer, int button) {
-                boolean multiplayerButton = screenY >= buttonsStartPos && screenY <= buttonsStartPos + 100;
-                boolean soloGameButton = screenY >= buttonsStartPos + 100 && screenY <= buttonsStartPos + 200;
-                boolean devModeButton = screenY >= buttonsStartPos + 200 && screenY <= buttonsStartPos + 300;
+                boolean multiplayerButton = screenY >= buttonsStartPos && screenY <= buttonsStartPos + 200;
+                boolean soloGameButton = screenY >= buttonsStartPos + 200 && screenY <= buttonsStartPos + 400;
+                boolean devModeButton = screenY >= buttonsStartPos + 400 && screenY <= buttonsStartPos + 600;
 
                 // multiplayer game clicked
                 if (multiplayerButton || devModeButton) {
