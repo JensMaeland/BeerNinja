@@ -30,13 +30,13 @@ public class MainMenu {
 
         if (game.loading) {
             if (game.multiplayer && socket.enemyID == null) {
-                screenDrawer.draw(loadingScreen, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+                screenDrawer.draw(homeScreen, 0,(Gdx.graphics.getHeight() - Gdx.graphics.getWidth()*2)/2, Gdx.graphics.getWidth(), Gdx.graphics.getWidth() * 2);
                 screenDrawer.end();
                 System.out.println("Venter på motspiller..");
                 return;
             }
             else if (!game.multiplayer && socket.playerID == null) {
-                screenDrawer.draw(loadingScreen, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+                screenDrawer.draw(homeScreen, 0,(Gdx.graphics.getHeight() - Gdx.graphics.getWidth()*2)/2, Gdx.graphics.getWidth(), Gdx.graphics.getWidth() * 2);
                 screenDrawer.end();
                 System.out.println("Setter opp spill..");
                 return;
@@ -65,9 +65,10 @@ public class MainMenu {
         Gdx.input.setInputProcessor(new InputAdapter(){
             @Override
             public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-                boolean multiplayerButton = screenY >= buttonsStartPos && screenY <= buttonsStartPos + 200;
-                boolean soloGameButton = screenY >= buttonsStartPos + 200 && screenY <= buttonsStartPos + 400;
-                boolean devModeButton = screenY >= buttonsStartPos + 400 && screenY <= buttonsStartPos + 600;
+                int buttonHeight = 180*(2220/Gdx.graphics.getHeight());
+                boolean multiplayerButton = screenY >= buttonsStartPos && screenY <= buttonsStartPos + buttonHeight;
+                boolean soloGameButton = screenY >= buttonsStartPos + buttonHeight && screenY <= buttonsStartPos + 2*buttonHeight;
+                boolean devModeButton = screenY >= buttonsStartPos + 2*buttonHeight && screenY <= buttonsStartPos + 3*buttonHeight;
 
                 // game button clicked
                 if (multiplayerButton || soloGameButton) {
