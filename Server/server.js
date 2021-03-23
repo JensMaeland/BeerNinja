@@ -97,7 +97,7 @@ io.on("connection", (socket) => {
       [enemy.playerID]: enemy.score,
     });
 
-    socket.to(enemy.enemyID).emit("getPoints", {
+    socket.to(enemy.playerID).emit("getPoints", {
       [player.playerID]: player.score,
       [enemy.playerID]: enemy.score,
     });
