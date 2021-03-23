@@ -19,14 +19,14 @@ public class Bottle extends ApplicationAdapter {
     boolean collision;
     Hitbox hitbox;
 
-    public Bottle(int id, String bottlePlayer, int y, int velocity, double spin, double spawnTime, String myPlayer) {
+    public Bottle(int id, String bottlePlayer, int y, int velocity, double spin, double spawnTime, int scale, String myPlayer) {
         bottleId = id;
         bottlePlayerId = bottlePlayer;
         beerTexture = getTexture(bottlePlayer, myPlayer);
         beerSpawnTime = spawnTime;
         xStartPos = getXPos(bottlePlayer, myPlayer);
-        yStartPos = Gdx.graphics.getHeight() - y;
-        bottleVelocity = velocity;
+        yStartPos = Gdx.graphics.getHeight() - scale*y;
+        bottleVelocity = velocity*scale;
         bottleSpin = spin;
         collision = false;
         myPlayerId = myPlayer;
@@ -46,13 +46,11 @@ public class Bottle extends ApplicationAdapter {
     }
 
     private int getXPos(String player, String me) {
-        int margin = 80;
-
         if (player.equals(me)) {
-            return -margin;
+            return -beerTexture.getRegionWidth();
         }
         else {
-            return Gdx.graphics.getWidth() + margin;
+            return Gdx.graphics.getWidth();
         }
     }
 
@@ -78,14 +76,12 @@ public class Bottle extends ApplicationAdapter {
         return yStartPos - offset*offset*3*bottleVelocity;
     }
 
-    public Hitbox getHitbox(double gameTime, SpriteBatch screenDrawer, boolean devMode) {
-        int scale = Gdx.graphics.getHeight() / 1000;
-        int beerWidth = beerTexture.getRegionWidth() * scale;
-        int beerHeight = beerTexture.getRegionHeight() * scale;
+    public Hitbox getHitbox(double gameTime, SpriteBatch screenDrawer, boolean devMode, int scale) {
+        int beerWidth = beerTexture.getRegionWidth()*scale;
+        int beerHeight = beerTexture.getRegionHeight()*scale;
 
         double minX = getXOffset(gameTime);
         double minY = getYOffset(gameTime);
-
         double spinAngle = getSpin(gameTime);
 
         hitbox.updateHitbox(minX, minY, beerWidth, beerHeight, spinAngle);

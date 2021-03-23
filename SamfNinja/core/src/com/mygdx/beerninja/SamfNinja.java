@@ -1,5 +1,6 @@
 package com.mygdx.beerninja;
 
+import com.badlogic.gdx.Application;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputAdapter;
@@ -28,6 +29,7 @@ public class SamfNinja extends ApplicationAdapter {
 	int currentTouchIndex = 0;
 	int screenWidth;
 	int screenHeight;
+	int scale;
 	// game-settings as variables
 	boolean devMode = false; // set devMode for easier testing
 	double gameTimer = -2; // set seconds until game start
@@ -38,14 +40,16 @@ public class SamfNinja extends ApplicationAdapter {
 
 	@Override
 	public void create () {
+		Gdx.app.setLogLevel(Application.LOG_DEBUG);
 		// instancing a new batch drawer
 		screenDrawer = new SpriteBatch();
 		//
 		screenWidth = Gdx.graphics.getWidth();
 		screenHeight = Gdx.graphics.getHeight();
+		scale = Gdx.graphics.getWidth() / 540;
 		// instancing a new font drawer
 		font = new BitmapFont();
-		font.getData().setScale(2, 2);
+		font.getData().setScale(2*scale, 2*scale);
 		// instancing the main menu
 		mainMenu = new MainMenu();
 		// connect the socket and receive generated sprites from the server
@@ -116,7 +120,7 @@ public class SamfNinja extends ApplicationAdapter {
 	}
 
 	private void renderBeerSprites() {
-		int scale = 1;
+		//offsetX
 		for (Bottle beerBottle : generatedSprites.spawn(gameTimer)) {
 			float x = (float) beerBottle.getXOffset(gameTimer);
 			float y = (float) beerBottle.getYOffset(gameTimer);
@@ -124,19 +128,22 @@ public class SamfNinja extends ApplicationAdapter {
 			int height = beerBottle.beerTexture.getRegionHeight();
 
 			screenDrawer.begin();
-			screenDrawer.draw(beerBottle.beerTexture, x, y, (width*scale)/2F, (height*scale)/2F, width, height, scale, scale, (float) beerBottle.getSpin(gameTimer));
+			screenDrawer.draw(beerBottle.beerTexture, x, y, (width*scale)/2F, (height*scale)/2F, width*scale, height*scale, 1, 1, (float) beerBottle.getSpin(gameTimer));
 			screenDrawer.end();
 		}
 	}
 
 	private void getAndRenderUserTouches() {
+		final int scaleY = Gdx.graphics.getHeight() / 100;
+
 		// get touches
 		Gdx.input.setInputProcessor(new InputAdapter(){
 			@Override
 			public boolean touchDragged(int screenX, int screenY, int pointer) {
+
 				Touch touch = touches.get(currentTouchIndex);
-				touch.x = screenX;
-				touch.y = screenHeight - screenY;
+				touch.x = screenX/scale;
+				touch.y = screenY/scaleY;
 				touch.time = gameTimer;
 				touch.display = true;
 				currentTouchIndex = (currentTouchIndex + 1) % tailLength;
@@ -154,25 +161,30 @@ public class SamfNinja extends ApplicationAdapter {
 		});
 
 		// render touches
-		Touch prevTouch = null;
+		int prevX = 0;
+		int prevY = 0;
 		for (Touch touch : touches.values()) {
 			if (touch.display) {
 				screenDrawer.begin();
 
-				if (prevTouch != null) {
-					float deltaX = (float) touch.x - prevTouch.x;
-					float deltaY = (float) touch.y - prevTouch.y;
+				int touchX = touch.x*scale;
+				int touchY = screenHeight-touch.y*scaleY;
 
-					while ((Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10) && prevTouch.x != 0 && touch.id - prevTouch.id == 1) {
-						screenDrawer.draw(touch.texture, touch.x-deltaX/2, touch.y-deltaY/2);
-						screenDrawer.draw(touch.texture, prevTouch.x+deltaX/2, prevTouch.y+deltaY/2);
+				if (prevX > 0) {
+					float deltaX = (float) touchX - prevX;
+					float deltaY = (float) touchY - prevY;
+
+					while ((Math.abs(deltaX) > 10 && Math.abs(deltaX) < 80) || (Math.abs(deltaY) > 10 && Math.abs(deltaY) < 80)) {
+						screenDrawer.draw(touch.texture, touchX-deltaX/2, touchY-deltaY/2);
+						screenDrawer.draw(touch.texture, prevX+deltaX/2, prevY+deltaY/2);
 						deltaX = Math.signum(deltaX)*Math.max(Math.abs(deltaX) - 2, 2);
 						deltaY = Math.signum(deltaY)*Math.max(Math.abs(deltaY) - 2, 2);
 					}
 				}
-				prevTouch = touch;
+				prevX = touchX;
+				prevY = touchY;
 
-				screenDrawer.draw(touch.texture, touch.x, touch.y);
+				screenDrawer.draw(touch.texture, touchX, touchY);
 				screenDrawer.end();
 			}
 		}
@@ -182,7 +194,7 @@ public class SamfNinja extends ApplicationAdapter {
 			for (Touch touch : socket.enemyTouches.values()) {
 				if (touch.display) {
 					screenDrawer.begin();
-					screenDrawer.draw(touch.texture, screenWidth-touch.x, touch.y);
+					screenDrawer.draw(touch.texture, screenWidth-touch.x*scale, screenHeight-touch.y*scaleY);
 					screenDrawer.end();
 				}
 			}
@@ -200,23 +212,31 @@ public class SamfNinja extends ApplicationAdapter {
 			enemyTouch = socket.enemyTouches.get(socket.enemyTouchIndex-1);
 		}
 
+		float timestamp = System.currentTimeMillis();
+
+		int scaleY = Gdx.graphics.getHeight() / 100;
+		int touchX = touch.x*scale;
+		int touchY = screenHeight-touch.y*scaleY;
+		int enemyX = screenWidth-enemyTouch.x*scale;
+		int enemyY = screenHeight-enemyTouch.y*scaleY;
+
 		// check all bottle hitboxes
 		for (Bottle beerBottle : generatedSprites.spawn(gameTimer)) {
-			Hitbox hitbox = beerBottle.getHitbox(gameTimer, screenDrawer, devMode);
+			Hitbox hitbox = beerBottle.getHitbox(gameTimer, screenDrawer, devMode, scale);
 
 			// check touch hits with bottles
-			if (touch.display && hitbox.left <= touch.x && touch.x <= hitbox.right) {
-				if (hitbox.bottom <= touch.y && touch.y <= hitbox.top) {
-					CaughtBottle caughtBottle = new CaughtBottle(beerBottle.bottleId, gameTimer, beerBottle.getXOffset(gameTimer), beerBottle.getYOffset(gameTimer), beerBottle.bottlePlayerId);
+			if (touch.display && hitbox.left <= touchX && touchX <= hitbox.right) {
+				if (hitbox.bottom <= touchY && touchY <= hitbox.top) {
+					CaughtBottle caughtBottle = new CaughtBottle(beerBottle.bottleId, timestamp, beerBottle.getXOffset(gameTimer), beerBottle.getYOffset(gameTimer), beerBottle.bottlePlayerId);
 					latestCaughtBottle = caughtBottle;
 					generatedSprites.caughtBottle(caughtBottle, false, devMode);
 				}
 			}
 
 			// check enemy touch hits with bottles
-			if (enemyTouch.display && hitbox.left <= screenWidth-enemyTouch.x && screenWidth-enemyTouch.x <= hitbox.right) {
-				if (hitbox.bottom <= enemyTouch.y && enemyTouch.y <= hitbox.top) {
-					CaughtBottle caughtBottle = new CaughtBottle(beerBottle.bottleId, gameTimer, beerBottle.getXOffset(gameTimer), beerBottle.getYOffset(gameTimer), beerBottle.bottlePlayerId);
+			if (enemyTouch.display && hitbox.left <= enemyX && enemyX <= hitbox.right) {
+				if (hitbox.bottom <= enemyY && enemyY <= hitbox.top) {
+					CaughtBottle caughtBottle = new CaughtBottle(beerBottle.bottleId, timestamp, beerBottle.getXOffset(gameTimer), beerBottle.getYOffset(gameTimer), beerBottle.bottlePlayerId);
 					latestCaughtBottle = caughtBottle;
 					generatedSprites.caughtBottle(caughtBottle, true, devMode);
 				}
@@ -225,7 +245,7 @@ public class SamfNinja extends ApplicationAdapter {
 			// check bottle hitbox with other bottles
 			if (hitbox.left > 0 && hitbox.top > 0 && hitbox.left < screenWidth && hitbox.top < screenHeight) {
 				for (Bottle compareBottle : generatedSprites.spawn(gameTimer)) {
-					Hitbox obstacle = compareBottle.getHitbox(gameTimer, screenDrawer, devMode);
+					Hitbox obstacle = compareBottle.getHitbox(gameTimer, screenDrawer, devMode, scale);
 
 					if (beerBottle != compareBottle && !beerBottle.collision && !beerBottle.bottlePlayerId.equals(compareBottle.bottlePlayerId)) {
 						if (hitbox.right > obstacle.left && hitbox.left < obstacle.right) {

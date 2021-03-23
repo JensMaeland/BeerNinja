@@ -1,6 +1,7 @@
 package com.mygdx.beerninja;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.audio.Sound;
 
 import org.json.JSONException;
@@ -9,12 +10,15 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.List;
 
+import sun.rmi.runtime.Log;
+
 public class GenerateBeerFromData {
     List<Bottle> bottles;
     Integer size;
     BeerSocket socket;
+    AssetManager assetManager;
 
-    public GenerateBeerFromData(ArrayList<JSONObject> input, BeerSocket inputSocket) {
+    public GenerateBeerFromData(ArrayList<JSONObject> input, BeerSocket inputSocket, int scale) {
         size = input.size();
         socket = inputSocket;
 
@@ -27,14 +31,17 @@ public class GenerateBeerFromData {
                     String beerPlayer = (String) spriteData.get("playerID");
                     int bottleVelocity = (int) spriteData.get("velocity");
                     double bottleSpin = (double) spriteData.get("spin");
-                    Bottle bottle = new Bottle(bottleId, beerPlayer, yPos, bottleVelocity, bottleSpin, beerSpawnTime, inputSocket.playerID);
+                    Bottle bottle = new Bottle(bottleId, beerPlayer, yPos, bottleVelocity, bottleSpin, beerSpawnTime, scale, inputSocket.playerID);
                     inputBottles.add(bottle);
                 }
             } catch (JSONException e) {
             e.printStackTrace();
         }
-
         bottles = inputBottles;
+
+        assetManager = new AssetManager();
+        assetManager.load("break.mp3", Sound.class);
+        assetManager.finishLoading();
     }
 
     public List<Bottle> spawn(double gameTime) {
@@ -58,9 +65,6 @@ public class GenerateBeerFromData {
     }
 
     public void caughtBottle(CaughtBottle caughtBottle, boolean enemy, boolean devMode) {
-        //float timestamp = System.currentTimeMillis();
-        //caughtBottle.time = timestamp;
-
         for (Bottle bottle : bottles) {
             if (bottle.bottleId == caughtBottle.id) {
                 bottles.remove(bottle);
@@ -71,9 +75,9 @@ public class GenerateBeerFromData {
             }
         }
 
-        if (!devMode && !enemy) {
-        Sound beerPop = Gdx.audio.newSound(Gdx.files.internal("break.mp3"));
-        beerPop.play();
+        if (!devMode && !enemy && assetManager.isLoaded("break.mp3")) {
+            Sound sound = assetManager.get("break.mp3", Sound.class);
+            sound.play();
         }
     }
 }

@@ -2,6 +2,8 @@ package com.mygdx.beerninja;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputAdapter;
+import com.badlogic.gdx.assets.AssetManager;
+import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -9,10 +11,16 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 public class MainMenu {
     Texture homeScreen;
     Texture loadingScreen;
+    AssetManager assetManager;
 
     public MainMenu() {
         homeScreen = new Texture("home2.png");
         loadingScreen = new Texture("loading.png");
+
+        assetManager = new AssetManager();
+        assetManager.load("crack.mp3", Sound.class);
+        assetManager.load("theMidnight.mp3", Music.class);
+        assetManager.finishLoading();
     }
 
     public void renderMainMenu (final SamfNinja game, final BeerSocket socket, SpriteBatch screenDrawer) {
@@ -34,24 +42,24 @@ public class MainMenu {
                 return;
             }
 
-            game.generatedSprites = socket.generateSprites();
+            game.generatedSprites = socket.generateSprites(game.scale);
             game.gameTimer = -gameCountDown;
             game.loading = false;
             socket.getTouches(game.multiplayer);
             socket.getPoints();
             System.out.println("Spillet starter..");
 
-            if (!game.devMode) {
+            if (!game.devMode && assetManager.isLoaded("crack.mp3")) {
                 // play sound to start off the game
-                Sound beerPop = Gdx.audio.newSound(Gdx.files.internal("crack.mp3"));
+                Sound beerPop = assetManager.get("crack.mp3", Sound.class);
                 beerPop.play();
                 // play background music
-                Sound backgroundMusic = Gdx.audio.newSound(Gdx.files.internal("theMidnight.mp3"));
+                Music backgroundMusic = assetManager.get("theMidnight.mp3", Music.class);
                 backgroundMusic.play();
             }
         }
 
-        screenDrawer.draw(homeScreen, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        screenDrawer.draw(homeScreen, 0,(Gdx.graphics.getHeight() - Gdx.graphics.getWidth()*2)/2, Gdx.graphics.getWidth(), Gdx.graphics.getWidth() * 2);
         screenDrawer.end();
 
         Gdx.input.setInputProcessor(new InputAdapter(){

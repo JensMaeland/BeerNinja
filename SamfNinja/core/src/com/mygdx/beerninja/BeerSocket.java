@@ -25,8 +25,8 @@ public class BeerSocket {
     JSONArray bottleData;
     ArrayList<JSONObject> parsedBottleData;
     ArrayList<JSONObject> parsedTouchData;
-    //String socketUrl = "http://46.101.52.4:8080";
-    String socketUrl = "http://192.168.10.120:8080";
+    String socketUrl = "http://46.101.52.4:8080";
+    //String socketUrl = "http://192.168.10.120:8080";
     ObjectMapper mapper;
 
     public BeerSocket(int tailLength) {
@@ -61,7 +61,7 @@ public class BeerSocket {
         });
     }
 
-    public GenerateBeerFromData generateSprites() {
+    public GenerateBeerFromData generateSprites(int scale) {
         socket.emit("bottleList");
         socket.on("bottleList", new Emitter.Listener() {
             @Override
@@ -86,7 +86,7 @@ public class BeerSocket {
                 }
             }
 
-            return new GenerateBeerFromData(parsedBottleData, this);
+            return new GenerateBeerFromData(parsedBottleData, this, scale);
         } catch (InterruptedException | JSONException e) {
             e.printStackTrace();
         }

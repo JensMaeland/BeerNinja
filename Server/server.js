@@ -96,6 +96,11 @@ io.on("connection", (socket) => {
       [player.playerID]: player.score,
       [enemy.playerID]: enemy.score,
     });
+
+    socket.to(enemy.enemyID).emit("getPoints", {
+      [player.playerID]: player.score,
+      [enemy.playerID]: enemy.score,
+    });
   });
 
   socket.on("disconnect", function (socket) {
