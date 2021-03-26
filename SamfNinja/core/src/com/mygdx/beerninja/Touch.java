@@ -10,15 +10,13 @@ public class Touch {
     public int y;
     Texture texture;
     public boolean display;
-    public double time;
 
-    public Touch(int touchId, int screenX, int screenY, double timestamp, boolean enemy) {
+    public Touch(int touchId, int screenX, int screenY, boolean enemy) {
         id = touchId;
         x = screenX;
         y = Gdx.graphics.getHeight() - screenY;
         texture = getTexture(enemy);
         display = false;
-        time = timestamp;
     }
 
     private Texture getTexture(boolean enemy) {

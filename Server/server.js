@@ -1,111 +1,110 @@
 const {
-  generateListOfBeerObjects,
-  getWinningPlayerV2,
   addPlayer,
-  isBottleInOpponentsList,
-  allocatePoints,
-  appendBottle,
-  createInitialState,
-  pushBottleToCorrectPlayer,
+  setPlayerTouches,
+  resetPlayerScore,
+  removePlayer,
+} = require("./controllers/playerController");
+
+const {
+  generateListOfBeerObjects,
   getBottleList,
-  getPlayers,
-  getPlayer,
-  setScore,
-} = require("./eval-functions");
+  getPowerupList,
+  setWinningPlayer,
+} = require("./controllers/bottleController");
+
+const { gameTick } = require("./models/gameTick");
 
 const app = require("express")();
 const httpServer = require("http").createServer(app);
 const io = require("socket.io")(httpServer, {});
 
+const red = "\x1b[31m%s\x1b[0m";
+const green = "\x1b[32m%s\x1b[0m";
+const yellow = "\x1b[33m%s\x1b[0m";
+const gray = "\x1b[2m%s\x1b[0m";
+
 const port = 8080;
 
-/*Server now listens to port 8080*/
+/*Server now listens to port*/
 httpServer.listen(port, () => {
-  console.log("Server up and running..");
+  console.log(yellow, "Tapping fresh beer to start serving..");
 });
 
 io.on("connection", (socket) => {
-  console.log("Player connected: " + socket.id);
-  //socket.emit("socketID", { id: socket.id });
+  console.log(green, "Player connecting to server: " + socket.id);
+  socket.emit("connection", { connection: true });
 
   socket.on("setUpGame", (multiplayer) => {
-    // add player to game
+    const gameType = multiplayer ? "multiplayer-game: " : "solo-game: ";
+    console.log(gray, "Player requesting new " + gameType + socket.id);
+
     const player = addPlayer(socket.id);
-
-    let players = getPlayers();
-    console.log(players);
-
-    if (player.enemyID) {
-      generateListOfBeerObjects(multiplayer, player);
-    }
-
-    console.log("Requested game: " + socket.id);
 
     if (multiplayer) {
       if (player.enemyID) {
-        console.log("Starting game")
+        console.log(
+          green,
+          "Players: " +
+            socket.id +
+            " and " +
+            player.enemyID +
+            " matched up for game.."
+        );
+        generateListOfBeerObjects(multiplayer, player);
 
-        setScore(player.playerID, 0);
-        setScore(player.enemyID, 0);
+        resetPlayerScore(player.playerID);
+        resetPlayerScore(player.enemyID);
 
-        socket.emit("setUpGame", { playerID: player.playerID, enemyID: player.enemyID });
-        socket.to(player.enemyID).emit("setUpGame", { playerID: player.enemyID, enemyID: player.playerID });
+        socket.emit("setUpGame", {
+          playerID: player.playerID,
+          enemyID: player.enemyID,
+          bottleList: getBottleList(),
+          powerupList: getPowerupList(),
+        });
+        socket.to(player.enemyID).emit("setUpGame", {
+          playerID: player.enemyID,
+          enemyID: player.playerID,
+          bottleList: getBottleList(),
+          powerupList: getPowerupList(),
+        });
+
+        gameTick(socket);
+      } else {
+        console.log(gray, "Waiting for player 2: " + socket.id);
       }
-      else {
-        console.log("Waiting for player 2..")
-      }
-    }
-    else {
-      console.log("Starting solo game");
+    } else {
+      console.log(green, "Starting solo game: " + socket.id);
+      generateListOfBeerObjects(multiplayer, player);
 
-      setScore(player.playerID, 0);
-      socket.emit("setUpGame", { playerID: player.playerID, enemyID: null });
+      resetPlayerScore(player.playerID);
+      socket.emit("setUpGame", {
+        playerID: player.playerID,
+        enemyID: null,
+        bottleList: getBottleList(),
+        powerupList: getPowerupList(),
+      });
+
+      gameTick(socket, false);
     }
   });
 
   socket.on("touches", (touches) => {
-    let player = getPlayer(socket.id);
-
-    io.to(player.enemyID).emit("touches", touches);
+    setPlayerTouches(socket.id, touches);
   });
 
-  socket.on("bottleList", () => {
-    socket.emit("bottleList", {
-      bottleList: getBottleList(),
-    })
-  }
-  );
+  socket.on("caughtBottle", (bottleData) => {
+    const bottle = JSON.parse(bottleData);
 
-  socket.on("caughtBottle", (bottle) => {
-    console.log("Caught Bottle : ", bottle);
-    let player = getPlayer(socket.id);
-
-    // Returnerer bottle.playerID
-    var winner = getWinningPlayerV2(bottle);
-    console.log("Winner: ", winner);
-
-    if (!isBottleInOpponentsList(winner, bottle)) {
-      appendBottle(winner, bottle);
-      setScore(winner, 1);
-    }
-
-    player = getPlayer(player.playerID);
-    const enemy = getPlayer(player.enemyID);
-
-    socket.emit("getPoints", {
-      [player.playerID]: player.score,
-      [enemy.playerID]: enemy.score,
-    });
-
-    socket.to(enemy.playerID).emit("getPoints", {
-      [player.playerID]: player.score,
-      [enemy.playerID]: enemy.score,
-    });
+    console.log(
+      gray,
+      "Caught Bottle: " + bottle.id + " by player " + bottle.playerID
+    );
+    setWinningPlayer(bottle);
   });
 
-  socket.on("disconnect", function (socket) {
-    createInitialState();
+  socket.on("disconnect", () => {
+    console.log(red, "Player out of beer: " + socket.id);
 
-    console.log("Player Disconnected");
+    removePlayer(socket.id);
   });
 });

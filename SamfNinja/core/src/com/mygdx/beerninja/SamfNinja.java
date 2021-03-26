@@ -7,6 +7,8 @@ import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 
 import java.util.HashMap;
 
@@ -14,8 +16,9 @@ public class SamfNinja extends ApplicationAdapter {
 	// imported help-classes
 	SpriteBatch screenDrawer;
 	Texture background;
+	Texture powerupBackground;
 	Texture gameOverTexture;
-	Texture splash;
+	TextureRegion splash;
 	BitmapFont font;
 	// our own help-classes
 	MainMenu mainMenu;
@@ -34,13 +37,12 @@ public class SamfNinja extends ApplicationAdapter {
 	boolean devMode = false; // set devMode for easier testing
 	double gameTimer = -2; // set seconds until game start
 	final double gameEndTime = 38; // set duration of each game
-	final double powerUpTimer = 20; // set when the powerUp should spawn
 	final int tailLength = 35; // set length of tail when touching the screen
-	final String backgroundImage = "map3.png"; // set which background-image should display
+	final String backgroundImage = "map2.png"; // set which background-image should display
+	final String powerupBackgroundImage = "map3.png"; // set which background-image should display
 
 	@Override
 	public void create () {
-		Gdx.app.setLogLevel(Application.LOG_DEBUG);
 		// instancing a new batch drawer
 		screenDrawer = new SpriteBatch();
 		//
@@ -48,22 +50,29 @@ public class SamfNinja extends ApplicationAdapter {
 		screenHeight = Gdx.graphics.getHeight();
 		scale = Gdx.graphics.getWidth() / 540;
 		// instancing a new font drawer
-		font = new BitmapFont();
-		font.getData().setScale(2*scale, 2*scale);
+		FreeTypeFontGenerator fontGenerator = new FreeTypeFontGenerator(Gdx.files.internal("DelaGothicOne-Regular.ttf"));
+		FreeTypeFontGenerator.FreeTypeFontParameter fontParameter = new FreeTypeFontGenerator.FreeTypeFontParameter();
+		fontParameter.size = (int) (Gdx.graphics.getWidth() * 0.05);
+		font = fontGenerator.generateFont(fontParameter);
+		font.setColor(1,1,0.2F,1);
+		fontGenerator.dispose();
 		// instancing the main menu
 		mainMenu = new MainMenu();
 		// connect the socket and receive generated sprites from the server
 		socket = new BeerSocket(tailLength);
+		socket.connect();
 
 		// instancing objects for touch feature
 		for (int i = 0; i < tailLength; i++) {
-			touches.put(i, new Touch(i, 0, 0, 0, false));
+			touches.put(i, new Touch(i, 0, 0, false));
 		}
 
 		// setting textures to correct images
 		background = new Texture(backgroundImage);
+		powerupBackground = new Texture(powerupBackgroundImage);
 		gameOverTexture = new Texture("gameOver.png");
-		splash = new Texture("splash.png");
+		splash = new TextureRegion(new Texture("splash.png"));
+
 	}
 
 	@Override
@@ -89,31 +98,40 @@ public class SamfNinja extends ApplicationAdapter {
 
 	public void renderGUI() {
 		float brightness;
-		if (!devMode) {
-			brightness = (float) Math.max(0.6, (gameTimer - Math.round(gameTimer)) + 0.5);
+		if (devMode) {
+			brightness = 0.8F;
+		}
+		else if (gameTimer > generatedSprites.powerUpTimer + 1) {
+			brightness = (float) Math.max(0.1, (gameTimer - Math.round(gameTimer)) + 0.5);
 		}
 		else {
-			brightness = 0.6F;
+			brightness = (float) Math.max(0.6, (gameTimer - Math.round(gameTimer)) + 0.5);
 		}
 
 		screenDrawer.begin();
 		screenDrawer.setColor(brightness, brightness, 1F, 1F);
-		screenDrawer.draw(background, 0, 0, screenWidth, screenHeight);
-		screenDrawer.setColor(1F, 1F, 1F, 1F);
-
-		font.setColor(1,1,0.2F,1);
-		if (!multiplayer) {
-			font.draw(screenDrawer, "Poeng: " + socket.myPoints, 50, screenHeight - 50);
+		if (gameTimer > generatedSprites.powerUpTimer + 1) {
+			screenDrawer.draw(powerupBackground, 0, 0, screenWidth, screenHeight);
 		}
 		else {
-			font.draw(screenDrawer, "Meg: " + socket.myPoints, 50, screenHeight - 50);
-			font.draw(screenDrawer, "P2: " + socket.enemyPoints, screenWidth-80, screenHeight - 50);
+			screenDrawer.draw(background, 0, 0, screenWidth, screenHeight);
+		}
+		screenDrawer.setColor(1F, 1F, 1F, 1F);
+
+		int fontOffset = scale*15;
+		if (!multiplayer) {
+			font.draw(screenDrawer, "Poeng: " + socket.myPoints, fontOffset, screenHeight - fontOffset);
+		}
+		else {
+			font.draw(screenDrawer, "Meg: " + socket.myPoints, fontOffset, screenHeight - fontOffset);
+			font.draw(screenDrawer, "Motspiller: " + socket.enemyPoints, screenWidth-fontOffset*20, screenHeight - fontOffset);
 		}
 
 		if (latestCaughtBottle != null && latestCaughtBottle.time > gameTimer - 5 && !devMode) {
 			brightness = (float) (1.0-(gameTimer - latestCaughtBottle.time));
 			screenDrawer.setColor(brightness, brightness, brightness, brightness);
-			screenDrawer.draw(splash, (float) latestCaughtBottle.xcoor - 80, (float) latestCaughtBottle.ycoor + 40);
+			screenDrawer.draw(splash, (float) latestCaughtBottle.xcoor - 80, (float) latestCaughtBottle.ycoor + 40, 0, 0, splash.getRegionWidth()*scale, splash.getRegionHeight()*scale, 1, 1, 0F);
+
 			screenDrawer.setColor(1F, 1F, 1F, 1F);
 		}
 		screenDrawer.end();
@@ -134,6 +152,7 @@ public class SamfNinja extends ApplicationAdapter {
 	}
 
 	private void getAndRenderUserTouches() {
+		final int scaleX = Gdx.graphics.getWidth() / 100;
 		final int scaleY = Gdx.graphics.getHeight() / 100;
 
 		// get touches
@@ -142,9 +161,8 @@ public class SamfNinja extends ApplicationAdapter {
 			public boolean touchDragged(int screenX, int screenY, int pointer) {
 
 				Touch touch = touches.get(currentTouchIndex);
-				touch.x = screenX/scale;
+				touch.x = screenX/scaleX;
 				touch.y = screenY/scaleY;
-				touch.time = gameTimer;
 				touch.display = true;
 				currentTouchIndex = (currentTouchIndex + 1) % tailLength;
 				return false;
@@ -167,7 +185,7 @@ public class SamfNinja extends ApplicationAdapter {
 			if (touch.display) {
 				screenDrawer.begin();
 
-				int touchX = touch.x*scale;
+				int touchX = touch.x*scaleX;
 				int touchY = screenHeight-touch.y*scaleY;
 
 				if (prevX > 0) {
@@ -194,7 +212,7 @@ public class SamfNinja extends ApplicationAdapter {
 			for (Touch touch : socket.enemyTouches.values()) {
 				if (touch.display) {
 					screenDrawer.begin();
-					screenDrawer.draw(touch.texture, screenWidth-touch.x*scale, screenHeight-touch.y*scaleY);
+					screenDrawer.draw(touch.texture, screenWidth-touch.x*scaleX, screenHeight-touch.y*scaleY);
 					screenDrawer.end();
 				}
 			}
@@ -204,21 +222,16 @@ public class SamfNinja extends ApplicationAdapter {
 	private void checkHitboxes() {
 		// get latest touch object for player and enemy
 		Touch touch = touches.get(tailLength-1);
-		Touch enemyTouch = socket.enemyTouches.get(tailLength-1);
 		if (currentTouchIndex > 0) {
 			touch = touches.get(currentTouchIndex-1);
-		}
-		if (socket.enemyTouchIndex > 0) {
-			enemyTouch = socket.enemyTouches.get(socket.enemyTouchIndex-1);
 		}
 
 		float timestamp = System.currentTimeMillis();
 
+		int scaleX = Gdx.graphics.getWidth() / 100;
 		int scaleY = Gdx.graphics.getHeight() / 100;
-		int touchX = touch.x*scale;
+		int touchX = touch.x*scaleX;
 		int touchY = screenHeight-touch.y*scaleY;
-		int enemyX = screenWidth-enemyTouch.x*scale;
-		int enemyY = screenHeight-enemyTouch.y*scaleY;
 
 		// check all bottle hitboxes
 		for (Bottle beerBottle : generatedSprites.spawn(gameTimer)) {
@@ -227,18 +240,9 @@ public class SamfNinja extends ApplicationAdapter {
 			// check touch hits with bottles
 			if (touch.display && hitbox.left <= touchX && touchX <= hitbox.right) {
 				if (hitbox.bottom <= touchY && touchY <= hitbox.top) {
-					CaughtBottle caughtBottle = new CaughtBottle(beerBottle.bottleId, timestamp, beerBottle.getXOffset(gameTimer), beerBottle.getYOffset(gameTimer), beerBottle.bottlePlayerId);
+					CaughtBottle caughtBottle = new CaughtBottle(beerBottle.bottleId, gameTimer, beerBottle.getXOffset(gameTimer), beerBottle.getYOffset(gameTimer), beerBottle.bottlePlayerId);
 					latestCaughtBottle = caughtBottle;
-					generatedSprites.caughtBottle(caughtBottle, false, devMode);
-				}
-			}
-
-			// check enemy touch hits with bottles
-			if (enemyTouch.display && hitbox.left <= enemyX && enemyX <= hitbox.right) {
-				if (hitbox.bottom <= enemyY && enemyY <= hitbox.top) {
-					CaughtBottle caughtBottle = new CaughtBottle(beerBottle.bottleId, timestamp, beerBottle.getXOffset(gameTimer), beerBottle.getYOffset(gameTimer), beerBottle.bottlePlayerId);
-					latestCaughtBottle = caughtBottle;
-					generatedSprites.caughtBottle(caughtBottle, true, devMode);
+					generatedSprites.caughtBottle(caughtBottle, socket, devMode);
 				}
 			}
 
@@ -247,7 +251,7 @@ public class SamfNinja extends ApplicationAdapter {
 				for (Bottle compareBottle : generatedSprites.spawn(gameTimer)) {
 					Hitbox obstacle = compareBottle.getHitbox(gameTimer, screenDrawer, devMode, scale);
 
-					if (beerBottle != compareBottle && !beerBottle.collision && !beerBottle.bottlePlayerId.equals(compareBottle.bottlePlayerId)) {
+					if (beerBottle != compareBottle && !beerBottle.collision && !beerBottle.bottlePlayerId.equals(compareBottle.bottlePlayerId) && beerBottle.bottleId < 69 && compareBottle.bottleId < 69) {
 						if (hitbox.right > obstacle.left && hitbox.left < obstacle.right) {
 							if (hitbox.top > obstacle.bottom && hitbox.bottom < obstacle.top) {
 								beerBottle.xStartPos = (int) beerBottle.getXOffset(gameTimer);
@@ -261,15 +265,15 @@ public class SamfNinja extends ApplicationAdapter {
 	}
 
 	public void gameOver() {
-		loading = false;
-		devMode = false;
+		socket.gameSummary();
 
 		screenDrawer.begin();
-		screenDrawer.draw(gameOverTexture, 50, 500);
+		screenDrawer.draw(gameOverTexture, 50, 500, screenWidth-100, screenHeight/4);
 		screenDrawer.end();
 
 		if (gameTimer > gameEndTime + 5) {
 			generatedSprites = null;
+			gameTimer = -2;
 		}
 	}
 	

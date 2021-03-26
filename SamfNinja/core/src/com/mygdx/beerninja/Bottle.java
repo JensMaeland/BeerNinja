@@ -22,9 +22,9 @@ public class Bottle extends ApplicationAdapter {
     public Bottle(int id, String bottlePlayer, int y, int velocity, double spin, double spawnTime, int scale, String myPlayer) {
         bottleId = id;
         bottlePlayerId = bottlePlayer;
-        beerTexture = getTexture(bottlePlayer, myPlayer);
+        beerTexture = getTexture(id, bottlePlayer, myPlayer);
         beerSpawnTime = spawnTime;
-        xStartPos = getXPos(bottlePlayer, myPlayer);
+        xStartPos = getXPos(id, bottlePlayer, myPlayer);
         yStartPos = Gdx.graphics.getHeight() - scale*y;
         bottleVelocity = velocity*scale;
         bottleSpin = spin;
@@ -33,10 +33,16 @@ public class Bottle extends ApplicationAdapter {
         hitbox = new Hitbox();
     }
 
-    private TextureRegion getTexture(String player, String me) {
+    private TextureRegion getTexture(int id, String player, String me) {
         Texture beerTexture;
 
-        if (player.equals(me)) {
+        if (player.equals("420")) {
+            beerTexture = new Texture("colada.png");
+        }
+        else if (id >= 30) {
+            beerTexture = new Texture("dahls.png");
+        }
+        else if (player.equals(me)) {
             beerTexture = new Texture("pils.png");
         }
         else {
@@ -45,8 +51,14 @@ public class Bottle extends ApplicationAdapter {
         return new TextureRegion(beerTexture);
     }
 
-    private int getXPos(String player, String me) {
-        if (player.equals(me)) {
+    private int getXPos(int id, String player, String me) {
+        if (id >= 30) {
+            if (id % 2 == 0) {
+                return -beerTexture.getRegionWidth();
+            }
+            return Gdx.graphics.getWidth();
+        }
+        else if (player.equals(me)) {
             return -beerTexture.getRegionWidth();
         }
         else {
@@ -57,7 +69,13 @@ public class Bottle extends ApplicationAdapter {
     public double getXOffset(double gameTime) {
         double offset = gameTime - beerSpawnTime;
 
-        if (bottlePlayerId.equals(myPlayerId)) {
+        if (bottleId >= 30) {
+            if (bottleId % 2 == 0) {
+                return xStartPos + offset*bottleVelocity;
+            }
+            return xStartPos - offset*bottleVelocity;
+        }
+        else if (bottlePlayerId.equals(myPlayerId)) {
             if (!collision) {
                return xStartPos + offset*bottleVelocity;
             }
