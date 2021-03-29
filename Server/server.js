@@ -59,13 +59,13 @@ io.on("connection", (socket) => {
           playerID: player.playerID,
           enemyID: player.enemyID,
           bottleList: getBottleList(),
-          powerupList: getPowerupList(),
+          powerupList: getPowerupList(player.playerID),
         });
         socket.to(player.enemyID).emit("setUpGame", {
           playerID: player.enemyID,
           enemyID: player.playerID,
           bottleList: getBottleList(),
-          powerupList: getPowerupList(),
+          powerupList: getPowerupList(player.enemyID),
         });
 
         gameTick(socket);
@@ -81,7 +81,7 @@ io.on("connection", (socket) => {
         playerID: player.playerID,
         enemyID: null,
         bottleList: getBottleList(),
-        powerupList: getPowerupList(),
+        powerupList: getPowerupList(player.playerID),
       });
 
       gameTick(socket, false);

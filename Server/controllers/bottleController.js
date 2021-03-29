@@ -9,7 +9,12 @@ let powerupList = [];
 
 const getBottleList = () => bottleList;
 
-const getPowerupList = () => powerupList;
+const getPowerupList = (playerID) => {
+  let powerups = powerupList;
+  powerups.forEach((p) => (p.playerID = playerID));
+
+  return powerups;
+};
 
 const isBottleInOpponentsList = (playerID, bottle) => {
   const player = getPlayer(playerID);
@@ -78,7 +83,7 @@ const generateListOfBeerObjects = (
       //offset Y(from top)
       100 + Math.floor(Math.random() * standardOffsetY),
       //Player
-      playerID,
+      "",
       //Sprite Velocity
       standardVelocity + Math.floor(Math.random() * 150),
       Math.PI * Math.random()
