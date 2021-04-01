@@ -1,19 +1,19 @@
-const { Player } = require("../models/player");
+const { Player } = require("../entities/player");
 
 const players = {};
 
 const getPlayer = (playerID) => players[playerID];
 
-const addPlayer = (playerID) => {
+const addPlayer = (playerID, username) => {
   const enemy = Object.values(players).filter((p) => p.enemyID === "");
 
   let player;
   if (enemy.length) {
-    player = new Player(playerID, enemy[0].playerID);
+    player = new Player(playerID, username, enemy[0].playerID);
     players[playerID] = player;
     enemy[0].enemyID = playerID;
   } else {
-    player = new Player(playerID);
+    player = new Player(playerID, username);
     players[playerID] = player;
   }
 
@@ -32,11 +32,11 @@ const setPlayerTouches = (playerID, touchData) => {
   player.touches.currentTouchIndex = touchData.currentTouchIndex;
 };
 
-const incrementPlayerScore = (playerID) => {
+const incrementPlayerScore = (playerID, points = 1) => {
   const player = getPlayer(playerID);
   if (!player) return;
 
-  player.score += 1;
+  player.score += points;
 };
 
 const resetPlayerScore = (playerID) => {

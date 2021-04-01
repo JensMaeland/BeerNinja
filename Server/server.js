@@ -1,18 +1,19 @@
 const {
   addPlayer,
+  getPlayer,
   setPlayerTouches,
   resetPlayerScore,
   removePlayer,
-} = require("./controllers/playerController");
+} = require("./models/playerModel");
 
 const {
   generateListOfBeerObjects,
   getBottleList,
   getPowerupList,
   setWinningPlayer,
-} = require("./controllers/bottleController");
+} = require("./models/bottleModel");
 
-const { gameTick } = require("./models/gameTick");
+const { gameTick, gameDuration } = require("./entities/gameTick");
 
 const app = require("express")();
 const httpServer = require("http").createServer(app);
@@ -34,14 +35,16 @@ io.on("connection", (socket) => {
   console.log(green, "Player connecting to server: " + socket.id);
   socket.emit("connection", { connection: true });
 
-  socket.on("setUpGame", (multiplayer) => {
+  socket.on("setUpGame", (multiplayer, username) => {
     const gameType = multiplayer ? "multiplayer-game: " : "solo-game: ";
     console.log(gray, "Player requesting new " + gameType + socket.id);
 
-    const player = addPlayer(socket.id);
+    const player = addPlayer(socket.id, username);
 
     if (multiplayer) {
       if (player.enemyID) {
+        const enemy = getPlayer(player.enemyID);
+
         console.log(
           green,
           "Players: " +
@@ -53,19 +56,23 @@ io.on("connection", (socket) => {
         generateListOfBeerObjects(multiplayer, player);
 
         resetPlayerScore(player.playerID);
-        resetPlayerScore(player.enemyID);
+        resetPlayerScore(enemy.playerID);
 
         socket.emit("setUpGame", {
           playerID: player.playerID,
-          enemyID: player.enemyID,
+          enemyID: enemy.playerID,
+          enemyUsername: enemy.username,
           bottleList: getBottleList(),
           powerupList: getPowerupList(player.playerID),
+          gameDuration,
         });
         socket.to(player.enemyID).emit("setUpGame", {
-          playerID: player.enemyID,
+          playerID: enemy.playerID,
           enemyID: player.playerID,
+          enemyUsername: player.username,
           bottleList: getBottleList(),
-          powerupList: getPowerupList(player.enemyID),
+          powerupList: getPowerupList(enemy.playerID),
+          gameDuration,
         });
 
         gameTick(socket);
@@ -80,8 +87,10 @@ io.on("connection", (socket) => {
       socket.emit("setUpGame", {
         playerID: player.playerID,
         enemyID: null,
+        enemyUsername: null,
         bottleList: getBottleList(),
         powerupList: getPowerupList(player.playerID),
+        gameDuration,
       });
 
       gameTick(socket, false);

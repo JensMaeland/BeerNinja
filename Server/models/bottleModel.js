@@ -1,8 +1,9 @@
-const { getPlayer, incrementPlayerScore } = require("./playerController");
+const { getPlayer, incrementPlayerScore } = require("./playerModel");
 
-const { Beer } = require("../models/beer");
+const { Beer } = require("../entities/beer");
+const { gameDuration } = require("../entities/gameTick");
 
-const numberOfBeerObjects = 30;
+const numberOfBeerObjects = 50;
 
 let bottleList = [];
 let powerupList = [];
@@ -18,6 +19,8 @@ const getPowerupList = (playerID) => {
 
 const isBottleInOpponentsList = (playerID, bottle) => {
   const player = getPlayer(playerID);
+
+  if (!player) return false;
 
   for (let alreadyCaughtBottle of player.bottles) {
     if (alreadyCaughtBottle.id == bottle.id) {
@@ -64,7 +67,9 @@ const generateListOfBeerObjects = (
       // id
       i,
       // seconds to spawn
-      Math.round((i + Math.random()) * 10000) / 10000,
+      Math.round(
+        (i * (gameDuration / numberOfBeerObjects) + Math.random()) * 10000
+      ) / 10000,
       //offset Y(from top)
       100 + Math.floor(Math.random() * standardOffsetY),
       //Player
@@ -77,7 +82,7 @@ const generateListOfBeerObjects = (
     //Creates new powerup beer object
     powerupSpriteList[i] = new Beer(
       // id
-      30 + i,
+      numberOfBeerObjects + i,
       // seconds to spawn
       Math.round((i / powerupDuration + Math.random()) * 10000) / 10000,
       //offset Y(from top)
@@ -101,9 +106,11 @@ Funksjonen tar inn en flaske, og finner spilleren som skal få et poeng.
 const setWinningPlayer = (bottle) => {
   const winner = getPlayer(bottle.playerID);
 
+  if (!winner) return;
+
   if (!isBottleInOpponentsList(winner.playerID, bottle)) {
     appendBottle(winner.playerID, bottle);
-    incrementPlayerScore(winner.playerID, 1);
+    incrementPlayerScore(winner.playerID, bottle.points);
   }
 };
 

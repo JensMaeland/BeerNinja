@@ -1,14 +1,14 @@
-const { getPlayer, removePlayer } = require("../controllers/playerController");
+const { getPlayer, removePlayer } = require("../models/playerModel");
 
 const red = "\x1b[31m%s\x1b[0m";
 
-const duration = 40 * 1000;
+const gameDuration = 40;
 
 const dtMultiplayer = 1000 / 20;
 const dtSolo = 1000 / 5;
 
 const gameTick = (socket, multiplayer = true, timer = 0) => {
-  if (timer < duration) {
+  if (timer < gameDuration * 1000) {
     timer += multiplayer ? dtMultiplayer : dtSolo;
 
     setTimeout(
@@ -69,4 +69,5 @@ const gameTick = (socket, multiplayer = true, timer = 0) => {
 
 module.exports = {
   gameTick,
+  gameDuration,
 };
