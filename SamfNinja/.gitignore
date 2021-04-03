@@ -1,5 +1,7 @@
 ## Java
 
+name.txt
+
 *.class
 *.war
 *.ear
