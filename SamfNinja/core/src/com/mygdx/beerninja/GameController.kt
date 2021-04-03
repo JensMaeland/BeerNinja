@@ -13,16 +13,13 @@ import java.util.*
 
 class GameController {
     private lateinit var socket: Socket
-    private var socketUrl = "http://192.168.1.112:8080"
+    private var socketUrl = "http://46.101.52.4:8080"
     private var mapper: ObjectMapper = ObjectMapper()
     var connected = false
 
     private var enemyCaughtBottles = ArrayList<JSONObject>()
     var newGameModel: GameModel? = null
     var loadingGame: RouteRequest? = null
-
-    //String socketUrl = "http://46.101.52.4:8080";
-
 
     // socket connects to server initially
     private fun connect() {
@@ -88,7 +85,6 @@ class GameController {
 
         socket.on("touches") { args ->
             val receivedData = args[0] as JSONObject
-            println(receivedData)
             currentGameModel.enemyTouchIndex = receivedData.getInt("currentTouchIndex")
             val touchData = receivedData["touches"] as JSONObject
             currentGameModel.updateEnemyTouches(touchData)
