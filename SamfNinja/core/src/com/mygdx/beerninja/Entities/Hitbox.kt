@@ -1,11 +1,10 @@
 package com.mygdx.beerninja
 
-import com.badlogic.gdx.ApplicationAdapter
 import com.badlogic.gdx.graphics.Texture
 import kotlin.math.cos
 import kotlin.math.sin
 
-class Hitbox : ApplicationAdapter() {
+class Hitbox(textures: HashMap<String, Texture>) {
     var left: Float = 0.0f
     var top: Float = 0.0f
     var right: Float = 0.0f
@@ -50,8 +49,8 @@ class Hitbox : ApplicationAdapter() {
         }
     }
 
-    override fun create() {
-        texture = Texture("touch.png")
+    init {
+        texture = textures["hitbox"]
     }
 
 }

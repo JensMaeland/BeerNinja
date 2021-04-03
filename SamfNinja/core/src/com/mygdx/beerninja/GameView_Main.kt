@@ -15,13 +15,12 @@ import kotlin.math.sign
 
 class GameView : ApplicationAdapter() {
     // imported help-classes for graphics and texture
-    private lateinit var drawer: SpriteBatch
+    lateinit var drawer: SpriteBatch
     private lateinit var fontDrawer: BitmapFont
-    private lateinit var background: Texture
-    private lateinit var secondaryBackground: Texture
-    private lateinit var splash: TextureRegion
+    lateinit var textures: HashMap<String, Texture>
     private lateinit var scoreBars: ArrayList<Texture>
 
+    private lateinit var splash: TextureRegion
     // main menu for the game
     private lateinit var menu: MenuView
     // game-controller responsible for communicating with server
@@ -33,9 +32,6 @@ class GameView : ApplicationAdapter() {
     var screenWidth = 0
     var screenHeight = 0
     var scale = 0
-    var username = ""
-    // set which background-image should display
-    private val backgroundImage = "map2.png"
 
     // function to create or start up the application
     override fun create() {
@@ -53,13 +49,17 @@ class GameView : ApplicationAdapter() {
         fontDrawer = fontGenerator.generateFont(fontParameter)
         fontGenerator.dispose()
         // instancing the main menu
-        menu = MenuView(this)
+        menu = MenuView()
         // instancing a game controller, automatically connecting to server
         controller = GameController()
 
-        // setting backgrounds to correct png images
-        background = Texture(backgroundImage)
-        secondaryBackground = Texture("map3.png")
+        // setting backgrounds and textures to correct png images
+        val textureNames = listOf("bkg", "secondaryBkg", "menuBkg", "gameoverBkg", "myTouch", "enemyTouch", "hitbox", "colada", "dahls", "pils", "dag")
+        textures = HashMap()
+        for (textureName: String in textureNames) {
+            textures[textureName] = Texture("$textureName.png")
+
+        }
         scoreBars = ArrayList()
         // adding the different textures for the scoreBar to a list
         scoreBars.add(Texture("bar2_0.png"))
@@ -73,14 +73,15 @@ class GameView : ApplicationAdapter() {
 
     // render function called continuously to display content on screen
     override fun render() {
+        drawer.begin()
+
         // as long as no gameModel exists, display the main menu only
         if (currentGameModel == null) {
             menu.render(this)
-            return
         }
 
         // check if game is ongoing, meaning the gameModel timer is less than game duration
-        if (currentGameModel!!.timer < currentGameModel!!.gameDuration) {
+        else if (currentGameModel!!.timer < currentGameModel!!.gameDuration) {
             // increment the gameModel timer
             currentGameModel!!.timer += Gdx.graphics.deltaTime
             // render all elements of the gameView
@@ -88,12 +89,16 @@ class GameView : ApplicationAdapter() {
             renderBeerSprites()
             renderUserTouches()
             // continuously check hitBoxes in the gameModel
-            currentGameModel!!.checkHitboxes(currentGameModel!!.timer, scale)
-            return
+            currentGameModel!!.checkHitboxes(currentGameModel!!.timer, scale, currentGameModel!!.devMode)
+            controller.sendTouches(currentGameModel!!)
         }
 
         // after the game is done, display the gameOver screen
-        menu.renderGameoverScreen(this)
+        else {
+            menu.renderGameoverScreen(this)
+        }
+
+        drawer.end()
     }
 
     // function to render all game GUI
@@ -113,12 +118,11 @@ class GameView : ApplicationAdapter() {
         // set font color for game GUI
         fontDrawer.setColor(1f, 1f, 0.2f, 1f)
 
-        drawer.begin()
         // draw game background, and change to secondaryBackground after powerUp has spawned
         if (currentGameModel!!.timer <= currentGameModel!!.powerUpTimer + 1) {
-            drawer.draw(background, 0f, 0f, screenWidth.toFloat(), screenHeight.toFloat())
+            drawer.draw(textures["bkg"], 0f, 0f, screenWidth.toFloat(), screenHeight.toFloat())
         } else {
-            drawer.draw(secondaryBackground, 0f, 0f, screenWidth.toFloat(), screenHeight.toFloat())
+            drawer.draw(textures["secondaryBkg"], 0f, 0f, screenWidth.toFloat(), screenHeight.toFloat())
         }
         drawer.setColor(1f, 1f, 1f, 1f)
 
@@ -126,7 +130,7 @@ class GameView : ApplicationAdapter() {
         val fontOffsetX = scale * 15f
         val fontOffsetY = scale * 15f + 80f
         // draw the points on screen, either for one player or both players if multiplayer
-        fontDrawer.draw(drawer, username + ": " + currentGameModel!!.myPoints, fontOffsetX, screenHeight - fontOffsetY)
+        fontDrawer.draw(drawer, currentGameModel!!.username + ": " + currentGameModel!!.myPoints, fontOffsetX, screenHeight - fontOffsetY)
         if (currentGameModel!!.multiplayer) {
             fontDrawer.draw(drawer, currentGameModel!!.enemyUsername + ": " + currentGameModel!!.enemyPoints, screenWidth/2f, screenHeight - fontOffsetY)
         }
@@ -137,7 +141,7 @@ class GameView : ApplicationAdapter() {
         // draw splash effects when a bottle has been caught
         if (currentGameModel?.latestCaughtBottle != null) {
             // set brightness of drawer based on time since caughtBottle, so splash effect fades out
-            brightness = (2.0 - (currentGameModel!!.timer - currentGameModel?.latestCaughtBottle!!.time)).toFloat()
+            brightness = (1.0 - (currentGameModel!!.timer - currentGameModel?.latestCaughtBottle!!.time)).toFloat()
             drawer.setColor(brightness, brightness, brightness, brightness)
 
             val caughtX = currentGameModel?.latestCaughtBottle!!.xcoor
@@ -158,16 +162,14 @@ class GameView : ApplicationAdapter() {
 
             // draw a number in a different color to indicate the scoreStreak
             fontDrawer.setColor(1f, 0.1f, 0.5f, 1f)
-            fontDrawer.draw(drawer, "+ " + currentGameModel!!.streak, screenWidth/2f - fontOffsetX, screenHeight - fontOffsetY)
+            fontDrawer.draw(drawer, "+ " + currentGameModel!!.streak, screenWidth/2f - 2*fontOffsetX, screenHeight - fontOffsetY)
         }
 
         drawer.setColor(1f, 1f, 1f, 1f)
-        drawer.end()
     }
 
     private fun renderBeerSprites() {
-        drawer.begin()
-        for (beerBottle in currentGameModel!!.spawn()) {
+        for (beerBottle in currentGameModel!!.spawn(currentGameModel!!.devMode)) {
             val width = (beerBottle.texture!!.regionWidth * scale).toFloat()
             val height = (beerBottle.texture!!.regionHeight * scale).toFloat()
             val bottleX = beerBottle.getXOffset(currentGameModel!!.timer)
@@ -175,7 +177,6 @@ class GameView : ApplicationAdapter() {
             val spin = beerBottle.getSpin(currentGameModel!!.timer)
             drawer.draw(beerBottle.texture, bottleX, bottleY, width / 2, height / 2, width, height, 1f, 1f, spin)
         }
-        drawer.end()
     }
 
     private fun renderUserTouches() {
@@ -207,12 +208,10 @@ class GameView : ApplicationAdapter() {
         }
 
         // render user touches
-        drawer.begin()
-
         var prevX = 0
         var prevY = 0
         for (touch in currentGameModel?.touches?.values!!) {
-            if (touch!!.display) {
+            if (touch.display) {
                 val touchX = touch.x * scaleX
                 val touchY = screenHeight - touch.y * scaleY
                 if (prevX > 0) {
@@ -228,20 +227,17 @@ class GameView : ApplicationAdapter() {
                 }
                 prevX = touchX
                 prevY = touchY
-                drawer.draw(touch.texture, touchX.toFloat(), touchY.toFloat(), 12f, 12f)
+                drawer.draw(touch.texture, touchX.toFloat(), touchY.toFloat(), 16f * scale, 16f * scale)
             }
         }
-        drawer.end()
 
         // render enemy touches
         if (currentGameModel!!.multiplayer) {
-            drawer.begin()
             for (touch in currentGameModel!!.enemyTouches.values) {
                 if (touch.display) {
-                    drawer.draw(touch.texture, (screenWidth - touch.x * scaleX).toFloat(), (screenHeight - touch.y * scaleY).toFloat())
+                    drawer.draw(touch.texture, (screenWidth - touch.x * scaleX).toFloat(), (screenHeight - touch.y * scaleY).toFloat(), 16f * scale, 16f * scale)
                 }
             }
-            drawer.end()
         }
     }
 

@@ -86,8 +86,8 @@ io.on("connection", (socket) => {
       resetPlayerScore(player.playerID);
       socket.emit("setUpGame", {
         playerID: player.playerID,
-        enemyID: null,
-        enemyUsername: null,
+        enemyID: "",
+        enemyUsername: "",
         bottleList: getBottleList(),
         powerupList: getPowerupList(player.playerID),
         gameDuration,

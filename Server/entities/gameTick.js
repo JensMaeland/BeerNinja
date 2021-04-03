@@ -55,7 +55,7 @@ const gameTick = (socket, multiplayer = true, timer = 0) => {
         )
       : console.log(red, "Game over: " + player.playerID);
 
-    player && socket.to(player.playerID).emit("gameSummary", { player, enemy });
+    player && socket.emit("gameSummary", { player, enemy });
     multiplayer &&
       enemy &&
       socket

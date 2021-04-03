@@ -6,23 +6,17 @@ import com.badlogic.gdx.InputAdapter
 import com.badlogic.gdx.assets.AssetManager
 import com.badlogic.gdx.audio.Music
 import com.badlogic.gdx.audio.Sound
-import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.graphics.g2d.BitmapFont
-import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator.FreeTypeFontParameter
 import java.util.*
 
-class MenuView (game: GameView) {
-    private var drawer: SpriteBatch = SpriteBatch()
-    private var menuBackground: Texture = Texture("home.png")
-    private var gameoverBackground: Texture = Texture("map1.png")
+class MenuView () {
     private var smallFont: BitmapFont
     private var largeFont: BitmapFont
     private var soundManager: AssetManager = AssetManager()
 
-    var gameModes: ArrayList<GameMode> = ArrayList()
-    var gameMode: GameMode? = null
+    var routeRequests: ArrayList<RouteRequest> = ArrayList()
     private var gamesummaryTimer = 0f
 
     // placement of text and button elements on screen
@@ -33,90 +27,97 @@ class MenuView (game: GameView) {
     val buttonsTopY = buttonStartY + buttonHeight / 2
     var buttonsBottomY = 0
 
+    // menu renders only if no currentGameMode is initialized
     fun render(game: GameView) {
-        // if gameMode is chosen, render the loadingScreen
-        if (gameMode != null) {
-            renderLoadingScreen(game)
+        // if a newGameModel is created after controller has received data, set this to the current one
+        if (game.controller.newGameModel != null) {
+            game.currentGameModel = game.controller.newGameModel
+            // play sounds starting and during the game
+            if (!game.controller.newGameModel!!.devMode && soundManager.isLoaded("theMidnight.mp3")) {
+                soundManager.get("crack.mp3", Sound::class.java).play()
+                soundManager.get("theMidnight.mp3", Music::class.java).play()
+            }
+            return
+        }
+        // if no newGameModel exists, but a game is still loading, render the loading screen
+        else if (game.controller.loadingGame != null) {
+               renderLoadingScreen(game)
             return
         }
 
         // draw the menu background and header
-        drawer.begin()
-        drawer.draw(menuBackground, 0f, 0f, game.screenWidth.toFloat(), game.screenHeight.toFloat())
-        largeFont.draw(drawer, "SamfNinja", buttonMargin, headerY)
-        smallFont.draw(drawer, "Gruppe 20", buttonMargin, headerY - buttonHeight)
+        game.drawer.draw(game.textures["menuBkg"], 0f, 0f, game.screenWidth.toFloat(), game.screenHeight.toFloat())
+        largeFont.draw(game.drawer, "SamfNinja", buttonMargin, headerY)
+        smallFont.draw(game.drawer, "Gruppe 20", buttonMargin, headerY - buttonHeight)
 
-        // draw buttons for each gameMode
-        for (i in gameModes.indices) {
+        // draw buttons for each routeRequest, meaning a game or a setting
+        for (i in routeRequests.indices) {
             val buttonYPos = (buttonStartY - buttonHeight * (i + 1)).toFloat()
-            smallFont.draw(drawer, "> " + gameModes[i].description, buttonMargin, buttonYPos)
+            smallFont.draw(game.drawer, "> " + routeRequests[i].description, buttonMargin, buttonYPos)
         }
-        drawer.end()
 
-        // check for user touches on buttons, and set clicked gameMode
+        // check for user touches on buttons, and set act on specified route request
         Gdx.input.inputProcessor = object : InputAdapter() {
             override fun touchDown(screenX: Int, screenY: Int, pointer: Int, button: Int): Boolean {
                 val y = Gdx.graphics.height - screenY
                 if (y in buttonsBottomY until buttonsTopY) {
-                    val gameModeIndex = (gameModes.size - 1) - ((y - buttonsBottomY) / buttonHeight)
-                    gameMode = gameModes[gameModeIndex]
+                    val gameModeIndex = (routeRequests.size - 1) - ((y - buttonsBottomY) / buttonHeight)
+                    onButtonClicked(game, routeRequests[gameModeIndex])
                 }
                 return true
             }
         }
     }
 
-    private fun renderLoadingScreen(game: GameView) {
-        drawer.begin()
-        drawer.draw(menuBackground, 0f, 0f, game.screenWidth.toFloat(), game.screenHeight.toFloat())
-
-        if (gameMode!!.multiplayer) {
-            largeFont.draw(drawer, "Flerspiller", buttonMargin, headerY)
-        } else {
-            largeFont.draw(drawer, "Enspiller", buttonMargin, headerY)
-        }
-        smallFont.draw(drawer, "Laster..", buttonMargin, headerY - buttonHeight)
-        drawer.end()
-
+    private fun onButtonClicked(game: GameView, routeRequest: RouteRequest) {
         when {
-            gameMode?.settings == false -> {
-                game.currentGameModel = game.controller.setUpGame(gameMode!!.multiplayer, gameMode!!.devMode, game.username, game.scale)
+            routeRequest.settings == false -> {
+                game.controller.setUpGame(routeRequest, getUsername(), game.scale, game.drawer, soundManager, game.textures)
             }
-            gameMode!!.name == "Brukernavn" -> {
-                val usernameFile = Gdx.files.local("name.txt")
+            routeRequest.name == "Brukernavn" -> {
                 val usernameInput = UsernameInput()
-                Gdx.input.getTextInput(usernameInput, "Brukernavn", "", "")
-                game.username = usernameFile.readString().split("\\r?\\n")[0]
+                Gdx.input.getTextInput(usernameInput, "Brukernavn", getUsername(), "")
             }
-            gameMode!!.name == "Toppliste" -> {
+            routeRequest.name == "Toppliste" -> {
                 //highscoreList()
             }
         }
+    }
 
-        // play sounds starting and during the game
-        if (!gameMode!!.devMode && gameMode?.settings == false && soundManager.isLoaded("theMidnight.mp3")) {
-            soundManager.get("crack.mp3", Sound::class.java).play()
-            soundManager.get("theMidnight.mp3", Music::class.java).play()
+    private fun renderLoadingScreen(game: GameView) {
+        game.drawer.draw(game.textures["menuBkg"], 0f, 0f, game.screenWidth.toFloat(), game.screenHeight.toFloat())
+
+        if (game.controller.loadingGame!!.multiplayer) {
+            largeFont.draw(game.drawer, "Flerspiller", buttonMargin, headerY)
+            smallFont.draw(game.drawer, "Ser etter motspiller..", buttonMargin, headerY - buttonHeight)
+
+        } else {
+            largeFont.draw(game.drawer, "Enspiller", buttonMargin, headerY)
+            smallFont.draw(game.drawer, "Laster..", buttonMargin, headerY - buttonHeight)
         }
     }
 
     fun renderGameoverScreen(game: GameView) {
+        println(game.currentGameModel!!.myResult)
         if (game.currentGameModel!!.myResult == null) {
             return
         }
 
         val gameSummary = game.currentGameModel!!.getGameSummary()
 
-        drawer.begin()
-        drawer.draw(gameoverBackground, 0f, 0f, Gdx.graphics.width.toFloat(), Gdx.graphics.height.toFloat())
-        largeFont.draw(drawer, "Game over!", buttonMargin, headerY)
-        smallFont.draw(drawer, gameSummary, buttonMargin, headerY - buttonHeight)
-        drawer.end()
+        game.drawer.draw(game.textures["gameoverBkg"], 0f, 0f, Gdx.graphics.width.toFloat(), Gdx.graphics.height.toFloat())
+        largeFont.draw(game.drawer, "Game over", buttonMargin, headerY)
+        smallFont.draw(game.drawer, gameSummary, buttonMargin, headerY - buttonHeight)
 
         gamesummaryTimer += Gdx.graphics.deltaTime
         if (gamesummaryTimer > 5) {
             game.currentGameModel = null
         }
+    }
+
+    private fun getUsername() : String {
+        val usernameFile = Gdx.files.local("name.txt")
+        return usernameFile.readString().split("\\r?\\n")[0]
     }
 
     init {
@@ -126,22 +127,23 @@ class MenuView (game: GameView) {
             // if username file does not exist, create new one
             usernameFile.writeString("", false)
             val usernameInput = UsernameInput()
-            Gdx.input.getTextInput(usernameInput, "Brukernavn", "", "")
+            Gdx.input.getTextInput(usernameInput, "Brukernavn", "", "Hvordan skal andre spillere se deg?")
         }
-        // set game username from file
-        game.username = usernameFile.readString().split("\\r?\\n")[0]
 
-        // instancing and adding all gameModes to the list
-        gameModes.add(GameMode("Flerspiller", "Finn motspiller", true, false, false))
-        gameModes.add(GameMode("Enspiller", "Spill alene", false, false, false))
-        gameModes.add(GameMode("Utviklermodus", "Dev", true, true, false))
-        gameModes.add(GameMode("Brukernavn", "Endre brukernavn", true, true, true))
-        gameModes.add(GameMode("Toppliste", "Toppliste", false, false, true))
-        buttonsBottomY = buttonsTopY - ((gameModes.size + 1) * buttonHeight)
+        // instancing and adding all route requests to the list
+        routeRequests.add(RouteRequest("Flerspiller", "Start flerspiller", true, false, false))
+        routeRequests.add(RouteRequest("Enspiller", "Spill alene", false, false, false))
+        routeRequests.add(RouteRequest("Utviklermodus", "Dev", true, true, false))
+        routeRequests.add(RouteRequest("Brukernavn", "Endre brukernavn", true, true, true))
+        routeRequests.add(RouteRequest("Toppliste", "Toppliste", false, false, true))
+        buttonsBottomY = buttonsTopY - ((routeRequests.size + 1) * buttonHeight)
 
         // loading the sounds for the menu and game
         soundManager.load("crack.mp3", Sound::class.java)
         soundManager.load("theMidnight.mp3", Music::class.java)
+        soundManager.load("break.mp3", Sound::class.java)
+        soundManager.load("crush.mp3", Sound::class.java)
+        soundManager.load("pop.mp3", Sound::class.java)
         soundManager.finishLoading()
 
         // instancing small and large fonts for the menu
@@ -159,8 +161,10 @@ class MenuView (game: GameView) {
 
 private class UsernameInput : TextInputListener {
     override fun input(text: String) {
-        val nameFile = Gdx.files.local("name.txt")
-        nameFile.writeString(text, false)
+        if (text.isNotEmpty()) {
+            val nameFile = Gdx.files.local("name.txt")
+            nameFile.writeString(text, false)
+        }
     }
     override fun canceled() {}
 }

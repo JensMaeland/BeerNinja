@@ -1,6 +1,8 @@
 package com.mygdx.beerninja
 
-import com.badlogic.gdx.scenes.scene2d.actions.Actions.delay
+import com.badlogic.gdx.assets.AssetManager
+import com.badlogic.gdx.graphics.Texture
+import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.socket.client.IO
 import io.socket.client.Socket
@@ -11,11 +13,12 @@ import java.util.*
 
 class GameController {
     private lateinit var socket: Socket
-    private var socketUrl = "http://192.168.1.173:8080"
+    private var socketUrl = "http://192.168.1.112:8080"
     private var mapper: ObjectMapper = ObjectMapper()
 
-    private var newGameModel: GameModel? = null
     private var enemyCaughtBottles = ArrayList<JSONObject>()
+    var newGameModel: GameModel? = null
+    var loadingGame: RouteRequest? = null
 
     //String socketUrl = "http://46.101.52.4:8080";
 
@@ -31,9 +34,10 @@ class GameController {
         }
     }
 
-    fun setUpGame(multiplayer: Boolean, devMode: Boolean, username: String, scale: Int) : GameModel? {
+    fun setUpGame(gameRequest: RouteRequest, username: String, scale: Int, drawer: SpriteBatch, soundManager: AssetManager, textures: HashMap<String, Texture>) {
         // requests the setup of a new game from server
-        socket.emit("setUpGame", multiplayer, username)
+        loadingGame = gameRequest
+        socket.emit("setUpGame", gameRequest.multiplayer, username)
 
         // waiting to receive a new game with details from the server
         socket.on("setUpGame") { args ->
@@ -54,25 +58,21 @@ class GameController {
                     powerupData.add(powerups[i] as JSONObject)
                 }
                 // create a new game model with provided data
-                newGameModel = GameModel(this, playerID, enemyID, enemyUsername, bottleData, powerupData, multiplayer, devMode, gameDuration, scale)
+                loadingGame = null
+                newGameModel = GameModel(this, playerID, enemyID, username, enemyUsername, bottleData, powerupData, gameRequest.multiplayer, gameRequest.devMode, gameDuration, scale, drawer, soundManager, textures)
+                if (newGameModel != null) {
+                    // setup all socket/controller functions that will continuously communicate with server through the game
+                    getTouches(newGameModel!!)
+                    getPoints(newGameModel!!)
+                    listenForGameOver(newGameModel!!)
+                }
             } catch (e: JSONException) {
                 println(e)
             }
         }
-
-        delay(500f)
-
-        if (newGameModel != null) {
-            // setup all socket/controller functions that will continuously communicate with server through the game
-            sendTouches(newGameModel!!)
-            getTouches(newGameModel!!)
-            getPoints(newGameModel!!)
-            listenForGameOver(newGameModel!!)
-        }
-        return newGameModel
     }
 
-    private fun sendTouches(currentGameModel: GameModel) {
+    fun sendTouches(currentGameModel: GameModel) {
         if (!currentGameModel.multiplayer) return
 
         val touchObject = JSONObject()
@@ -98,7 +98,7 @@ class GameController {
             val receivedData = args[0] as JSONObject
             currentGameModel.myPoints = receivedData.getInt(currentGameModel.playerID)
 
-            if (currentGameModel.enemyID != "null") {
+            if (currentGameModel.enemyID.isNotEmpty()) {
                 currentGameModel.enemyPoints = receivedData.getInt(currentGameModel.enemyID)
                 val newEnemyBottles = receivedData["enemyBottles"] as JSONArray
                 for (i in 0 until newEnemyBottles.length()) {
@@ -120,9 +120,15 @@ class GameController {
 
     private fun listenForGameOver(currentGameModel: GameModel) {
         socket.on("gameSummary") { args ->
+            newGameModel = null
+            socket.off("touches");
+            socket.off("points");
+            socket.off("gameSummary");
             val receivedData = args[0] as JSONObject
+            println(receivedData)
             currentGameModel.myResult = receivedData["player"] as JSONObject
-            if (currentGameModel.enemyID != "") {
+            if (currentGameModel.enemyID.isNotEmpty()) {
+                println(currentGameModel.enemyID)
                 currentGameModel.enemyResult = receivedData["enemy"] as JSONObject
             }
         }

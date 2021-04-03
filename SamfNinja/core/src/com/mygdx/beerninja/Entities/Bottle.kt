@@ -1,32 +1,31 @@
 package com.mygdx.beerninja
 
-import com.badlogic.gdx.ApplicationAdapter
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.graphics.g2d.TextureRegion
 
-class Bottle(var bottleId: Int, var bottlePlayerId: String, y: Int, velocity: Int, private var bottleSpin: Float, var beerSpawnTime: Float, scale: Int, private var myPlayerId: String) : ApplicationAdapter() {
+class Bottle(var bottleId: Int, var bottlePlayerId: String, y: Int, velocity: Int, private var bottleSpin: Float, var beerSpawnTime: Float, scale: Int, private var myPlayerId: String, private var textures: HashMap<String, Texture>) {
     var texture: TextureRegion? = null
     var collision = false
     var xStartPos: Int = 0
     private var yStartPos: Int
     private var bottleVelocity: Int
-    private var hitbox = Hitbox()
+    private var hitbox = Hitbox(textures)
 
     private fun getTexture(id: Int, player: String, me: String): TextureRegion {
-        val beerTexture: Texture = when {
+        val beerTexture: Texture? = when {
             player == "420" -> {
-                Texture("colada.png")
+                textures["colada"]
             }
             id >= 50 -> {
-                Texture("dahls.png")
+                textures["dahls"]
             }
             player == me -> {
-                Texture("pils.png")
+                textures["pils"]
             }
             else -> {
-                Texture("dag.png")
+                textures["dag"]
             }
         }
         return TextureRegion(beerTexture)
@@ -66,7 +65,7 @@ class Bottle(var bottleId: Int, var bottlePlayerId: String, y: Int, velocity: In
         return yStartPos - offset * offset * 3 * bottleVelocity
     }
 
-    fun getHitbox(gameTime: Float, screenDrawer: SpriteBatch, devMode: Boolean, scale: Int): Hitbox {
+    fun getHitbox(gameTime: Float, drawer: SpriteBatch, devMode: Boolean, scale: Int): Hitbox {
         val beerWidth = texture!!.regionWidth * scale
         val beerHeight = texture!!.regionHeight * scale
         val minX = getXOffset(gameTime)
@@ -76,12 +75,10 @@ class Bottle(var bottleId: Int, var bottlePlayerId: String, y: Int, velocity: In
 
         // draw the hitboxes in devMode
         if (devMode) {
-            screenDrawer.begin()
-            screenDrawer.draw(hitbox.texture, hitbox.left, hitbox.top)
-            screenDrawer.draw(hitbox.texture, hitbox.right, hitbox.bottom)
-            screenDrawer.draw(hitbox.texture, hitbox.left, hitbox.bottom)
-            screenDrawer.draw(hitbox.texture, hitbox.right, hitbox.top)
-            screenDrawer.end()
+            drawer.draw(hitbox.texture, hitbox.left, hitbox.top)
+            drawer.draw(hitbox.texture, hitbox.right, hitbox.bottom)
+            drawer.draw(hitbox.texture, hitbox.left, hitbox.bottom)
+            drawer.draw(hitbox.texture, hitbox.right, hitbox.top)
         }
         return hitbox
     }
@@ -99,12 +96,9 @@ class Bottle(var bottleId: Int, var bottlePlayerId: String, y: Int, velocity: In
         }
     }
 
-    override fun create() {
+    init {
         texture = getTexture(bottleId, bottlePlayerId, myPlayerId)
         xStartPos = getXPos(bottleId, bottlePlayerId, myPlayerId)
-    }
-
-    init {
         yStartPos = Gdx.graphics.height - scale * y
         bottleVelocity = velocity * scale
     }

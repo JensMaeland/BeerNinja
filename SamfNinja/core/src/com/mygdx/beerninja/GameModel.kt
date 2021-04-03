@@ -1,9 +1,9 @@
 package com.mygdx.beerninja
 
-import com.badlogic.gdx.ApplicationAdapter
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.assets.AssetManager
 import com.badlogic.gdx.audio.Sound
+import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import org.json.JSONException
 import org.json.JSONObject
@@ -11,20 +11,17 @@ import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.math.sign
 
-class GameModel(private var controller: GameController, var playerID: String, var enemyID: String, var enemyUsername: String, bottleData: ArrayList<JSONObject>, powerupData: ArrayList<JSONObject>, var multiplayer: Boolean, var devMode: Boolean, var gameDuration: Int, scale: Int) : ApplicationAdapter() {
-    private lateinit var drawer: SpriteBatch
-    private lateinit var soundManager: AssetManager
-
+class GameModel(private var controller: GameController, var playerID: String, var enemyID: String, var username: String, var enemyUsername: String, bottleData: ArrayList<JSONObject>, powerupData: ArrayList<JSONObject>, var multiplayer: Boolean, var devMode: Boolean, var gameDuration: Int, scale: Int, private var drawer: SpriteBatch, private var soundManager: AssetManager, textures: HashMap<String, Texture>) {
     // bottle state
     private var bottles: ArrayList<Bottle>
     private var powerupBottles: ArrayList<Bottle>
     var latestCaughtBottle: CaughtBottle? = null
 
     // touch state
-    val touches = HashMap<Int?, Touch?>()
+    val touches = HashMap<Int, Touch>()
     var enemyTouches = HashMap<Int, Touch>()
-    var currentTouchIndex = -1
-    var enemyTouchIndex = -1
+    var currentTouchIndex = 0
+    var enemyTouchIndex = 0
 
     // point/score state
     var myPoints = 0
@@ -40,23 +37,25 @@ class GameModel(private var controller: GameController, var playerID: String, va
     var timer = -2f // set seconds until game start
     val powerUpTimer = 18f // set when the powerUp should appear
 
-    fun spawn(): List<Bottle> {
-        val currentBottles: MutableList<Bottle> = ArrayList()
+    fun spawn(devMode: Boolean): List<Bottle> {
+        val currentBottles: ArrayList<Bottle> = ArrayList()
+        var newNumberOfBottles = 0
 
         for (bottle in bottles) {
-            if (timer > bottle.beerSpawnTime && timer < bottle.beerSpawnTime + 10 && bottle.texture != null) {
-                currentBottles.add(bottle)
+            if (timer > bottle.beerSpawnTime) {
+                if (timer < bottle.beerSpawnTime + 10) {
+                    currentBottles.add(bottle)
+                }
+                newNumberOfBottles += 1
             }
         }
 
         // play sound when spawning new bottles
-        if (currentBottles.size > numberOfSpawnedBottles) {
-            if (!devMode && soundManager.isLoaded("pop.mp3")) {
-                soundManager.get("pop.mp3", Sound::class.java).play()
-            }
+        if (!devMode && newNumberOfBottles > numberOfSpawnedBottles && !devMode) {
+            soundManager.get("pop.mp3", Sound::class.java).play()
+            numberOfSpawnedBottles = newNumberOfBottles
         }
 
-        numberOfSpawnedBottles = currentBottles.size
         return currentBottles
     }
 
@@ -73,8 +72,13 @@ class GameModel(private var controller: GameController, var playerID: String, va
             }
         }
 
-        if (!devMode && soundManager.isLoaded("break.mp3")) {
-            soundManager.get("break.mp3", Sound::class.java).play()
+        if (!devMode) {
+            if (caughtBottle.playerID == playerID || caughtBottle.playerID == "420") {
+                soundManager.get("break.mp3", Sound::class.java).play()
+            }
+            else {
+                soundManager.get("crush.mp3", Sound::class.java).play()
+            }
         }
     }
 
@@ -90,18 +94,19 @@ class GameModel(private var controller: GameController, var playerID: String, va
         }
     }
 
-    fun checkHitboxes(gameTimer: Float, scale: Int) {
-        if (currentTouchIndex < 0) return
-
+    fun checkHitboxes(gameTimer: Float, scale: Int, devMode: Boolean) {
         // get latest touch object for player
-        val touch = touches[currentTouchIndex]
+        var touch = touches[tailLength - 1]
+        if (currentTouchIndex > 0) {
+            touch = touches[currentTouchIndex - 1]
+        }
         val timestamp = System.currentTimeMillis().toFloat()
         val scaleX = Gdx.graphics.width / 100
         val scaleY = Gdx.graphics.height / 100
         val touchX = touch!!.x * scaleX
         val touchY = Gdx.graphics.height - touch.y * scaleY
 
-        val beerBottles = spawn()
+        val beerBottles = spawn(devMode)
         val numberOfBottles = 50
         // check all bottle hitboxes
         for (beerBottle in beerBottles) {
@@ -190,36 +195,20 @@ class GameModel(private var controller: GameController, var playerID: String, va
 
     fun getGameSummary() : String {
         if (!multiplayer) {
-            return myResult!!.getString("username") + " fikk " + myResult!!.getInt("points") + " poeng!"
+            return myResult!!.getString("username") + " fikk " + myResult!!.getInt("score") + " poeng!"
         }
 
         return when {
             myPoints > enemyPoints -> {
-                myResult!!.getString("username") + " vant med " + myResult!!.getInt("points") + "poeng!"
+                myResult!!.getString("username") + " vant med " + myResult!!.getInt("score") + " poeng!"
             }
             myPoints < enemyPoints -> {
-                enemyResult!!.getString("username") + " vant med " + enemyResult!!.getInt("points") + "poeng!"
+                enemyResult!!.getString("username") + " vant med " + enemyResult!!.getInt("score") + "poeng!"
             }
             else -> {
-                "Spillet ble uavgjort med " + myResult!!.getInt("points") + " poeng!"
+                "Spillet ble uavgjort med " + myResult!!.getInt("score") + " poeng!"
             }
         }
-    }
-
-    override fun create() {
-        drawer = SpriteBatch()
-        println("yees")
-
-        // instancing objects for touch feature
-        for (i in 0 until tailLength) {
-            touches[i] = Touch(i, false)
-            enemyTouches[i] = Touch(i, true)
-        }
-
-        soundManager = AssetManager()
-        soundManager.load("break.mp3", Sound::class.java)
-        soundManager.load("pop.mp3", Sound::class.java)
-        soundManager.finishLoading()
     }
 
     init {
@@ -227,13 +216,13 @@ class GameModel(private var controller: GameController, var playerID: String, va
         val powerupInputBottles: MutableList<Bottle> = ArrayList()
         try {
             for (spriteData in bottleData) {
-                val bottle = Bottle(spriteData["id"] as Int, (spriteData["playerID"] as String), spriteData["offsetY"] as Int,
-                        spriteData["velocity"] as Int, (spriteData["spin"] as Double).toFloat(), (spriteData["secondsToSpawn"] as Double).toFloat(), scale, playerID)
+                val bottle = Bottle(spriteData["id"] as Int, (spriteData["playerID"] as String), spriteData["offsetY"] as Int, spriteData["velocity"] as Int,
+                        (spriteData["spin"] as Double).toFloat(), (spriteData["secondsToSpawn"] as Double).toFloat(), scale, playerID, textures)
                 inputBottles.add(bottle)
             }
             for (spriteData in powerupData) {
                 val bottle = Bottle(spriteData["id"] as Int, (spriteData["playerID"] as String), spriteData["offsetY"] as Int, spriteData["velocity"] as Int,
-                        (spriteData["spin"] as Double).toFloat(), (spriteData["secondsToSpawn"] as Double + powerUpTimer + 1).toFloat(), scale, playerID)
+                        (spriteData["spin"] as Double).toFloat(), (spriteData["secondsToSpawn"] as Double + powerUpTimer + 1).toFloat(), scale, playerID, textures)
                 powerupInputBottles.add(bottle)
             }
         } catch (e: JSONException) {
@@ -242,7 +231,12 @@ class GameModel(private var controller: GameController, var playerID: String, va
 
         bottles = inputBottles as ArrayList<Bottle>
         powerupBottles = powerupInputBottles as ArrayList<Bottle>
-        bottles.add(Bottle(420, "420", scale * 150, 500, 1F, powerUpTimer, scale, playerID))
+        bottles.add(Bottle(420, "420", scale * 150, 500, 1f, powerUpTimer, scale, playerID, textures))
 
+        // instancing objects for touch feature
+        for (i in 0 until tailLength) {
+            touches[i] = Touch(i, false, textures)
+            enemyTouches[i] = Touch(i, true, textures)
+        }
     }
 }
