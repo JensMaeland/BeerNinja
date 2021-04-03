@@ -48,17 +48,30 @@ class MenuView () {
         // draw the menu background and header
         game.drawer.draw(game.textures["menuBkg"], 0f, 0f, game.screenWidth.toFloat(), game.screenHeight.toFloat())
         largeFont.draw(game.drawer, "SamfNinja", buttonMargin, headerY)
+        smallFont.setColor(1f, 1f, 1f, 0.5f)
         smallFont.draw(game.drawer, "Gruppe 20", buttonMargin, headerY - buttonHeight)
+        smallFont.setColor(1f, 1f, 1f, 1f)
 
-        // draw buttons for each routeRequest, meaning a game or a setting
-        for (i in routeRequests.indices) {
-            val buttonYPos = (buttonStartY - buttonHeight * (i + 1)).toFloat()
-            smallFont.draw(game.drawer, "> " + routeRequests[i].description, buttonMargin, buttonYPos)
+        if (game.controller.connected) {
+            // draw buttons for each routeRequest, meaning a game or a setting
+            for (i in routeRequests.indices) {
+                val buttonYPos = (buttonStartY - buttonHeight * (i + 1)).toFloat()
+                if (routeRequests[i].devMode) {
+                    smallFont.setColor(1f, 1f, 1f, 0.5f)
+                }
+                smallFont.draw(game.drawer, "> " + routeRequests[i].description, buttonMargin, buttonYPos)
+            }
         }
+        else {
+            smallFont.draw(game.drawer, "Kobler til server..", buttonMargin, buttonStartY.toFloat())
+        }
+
 
         // check for user touches on buttons, and set act on specified route request
         Gdx.input.inputProcessor = object : InputAdapter() {
             override fun touchDown(screenX: Int, screenY: Int, pointer: Int, button: Int): Boolean {
+                if (!game.controller.connected) return true
+
                 val y = Gdx.graphics.height - screenY
                 if (y in buttonsBottomY until buttonsTopY) {
                     val gameModeIndex = (routeRequests.size - 1) - ((y - buttonsBottomY) / buttonHeight)
@@ -132,10 +145,10 @@ class MenuView () {
 
         // instancing and adding all route requests to the list
         routeRequests.add(RouteRequest("Flerspiller", "Start flerspiller", true, false, false))
-        routeRequests.add(RouteRequest("Enspiller", "Spill alene", false, false, false))
-        routeRequests.add(RouteRequest("Utviklermodus", "Dev", true, true, false))
-        routeRequests.add(RouteRequest("Brukernavn", "Endre brukernavn", true, true, true))
+        routeRequests.add(RouteRequest("Enspiller", "Start solo", false, false, false))
         routeRequests.add(RouteRequest("Toppliste", "Toppliste", false, false, true))
+        routeRequests.add(RouteRequest("Brukernavn", "Endre brukernavn", true, false, true))
+        routeRequests.add(RouteRequest("Utviklermodus", "Dev modus", false, true, false))
         buttonsBottomY = buttonsTopY - ((routeRequests.size + 1) * buttonHeight)
 
         // loading the sounds for the menu and game
@@ -154,7 +167,6 @@ class MenuView () {
         smallFontParameter.size = (Gdx.graphics.width * 0.05).toInt()
         smallFont = fontGenerator.generateFont(smallFontParameter)
         largeFont = fontGenerator.generateFont(largeFontParameter)
-        smallFont.setColor(1f, 1f, 1f, 0.5f)
         fontGenerator.dispose()
     }
 }

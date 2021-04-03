@@ -15,6 +15,7 @@ class GameController {
     private lateinit var socket: Socket
     private var socketUrl = "http://192.168.1.112:8080"
     private var mapper: ObjectMapper = ObjectMapper()
+    var connected = false
 
     private var enemyCaughtBottles = ArrayList<JSONObject>()
     var newGameModel: GameModel? = null
@@ -29,7 +30,7 @@ class GameController {
             val receivedData = args[0] as JSONObject
             val connection = receivedData["connection"] as Boolean
             if (connection) {
-                println("Tilkoblet server..")
+                connected = true
             }
         }
     }
@@ -87,6 +88,7 @@ class GameController {
 
         socket.on("touches") { args ->
             val receivedData = args[0] as JSONObject
+            println(receivedData)
             currentGameModel.enemyTouchIndex = receivedData.getInt("currentTouchIndex")
             val touchData = receivedData["touches"] as JSONObject
             currentGameModel.updateEnemyTouches(touchData)
@@ -125,10 +127,8 @@ class GameController {
             socket.off("points");
             socket.off("gameSummary");
             val receivedData = args[0] as JSONObject
-            println(receivedData)
             currentGameModel.myResult = receivedData["player"] as JSONObject
             if (currentGameModel.enemyID.isNotEmpty()) {
-                println(currentGameModel.enemyID)
                 currentGameModel.enemyResult = receivedData["enemy"] as JSONObject
             }
         }

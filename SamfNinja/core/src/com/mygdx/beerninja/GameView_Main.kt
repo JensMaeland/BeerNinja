@@ -128,7 +128,7 @@ class GameView : ApplicationAdapter() {
 
         // define the offsets or margins from border for the font and GUI
         val fontOffsetX = scale * 15f
-        val fontOffsetY = scale * 15f + 80f
+        val fontOffsetY = scale * 70f
         // draw the points on screen, either for one player or both players if multiplayer
         fontDrawer.draw(drawer, currentGameModel!!.username + ": " + currentGameModel!!.myPoints, fontOffsetX, screenHeight - fontOffsetY)
         if (currentGameModel!!.multiplayer) {
@@ -158,11 +158,11 @@ class GameView : ApplicationAdapter() {
         // if streak is higher than 0, draw the correct scoreStreak texture
         if (currentGameModel!!.streak > 0) {
             drawer.setColor(1.2f-brightness, 1.2f-brightness, 1f, 1f)
-            drawer.draw(scoreBars[currentGameModel!!.streak], fontOffsetX, screenHeight - 65f*scale, screenWidth - 2*fontOffsetX, 50f*scale)
+            drawer.draw(scoreBars[currentGameModel!!.streak], fontOffsetX, screenHeight - (fontOffsetY - 5f*scale), screenWidth - 2*fontOffsetX, 50f*scale)
 
             // draw a number in a different color to indicate the scoreStreak
             fontDrawer.setColor(1f, 0.1f, 0.5f, 1f)
-            fontDrawer.draw(drawer, "+ " + currentGameModel!!.streak, screenWidth/2f - 2*fontOffsetX, screenHeight - fontOffsetY)
+            fontDrawer.draw(drawer, "+ " + currentGameModel!!.streak, screenWidth/2f - 3*fontOffsetX, screenHeight - fontOffsetY)
         }
 
         drawer.setColor(1f, 1f, 1f, 1f)

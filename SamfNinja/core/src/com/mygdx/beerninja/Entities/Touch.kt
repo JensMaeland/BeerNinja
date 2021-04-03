@@ -1,7 +1,9 @@
 package com.mygdx.beerninja
 
 import com.badlogic.gdx.graphics.Texture
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 
+@JsonIgnoreProperties("texture")
 class Touch(var id: Int, enemy: Boolean, private var textures: HashMap<String, Texture>) {
     var x: Int = 0
     var y: Int = 0

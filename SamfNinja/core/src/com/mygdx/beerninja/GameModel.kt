@@ -162,8 +162,8 @@ class GameModel(private var controller: GameController, var playerID: String, va
     }
 
     fun checkTouchDirectionChange(x: Int, y: Int) : Boolean {
-        var prevPrevTouchIndex = currentTouchIndex - 6
-        var prevTouchIndex = currentTouchIndex - 3
+        var prevPrevTouchIndex = currentTouchIndex - 4
+        var prevTouchIndex = currentTouchIndex - 2
 
         if (prevPrevTouchIndex < 0) {
             prevPrevTouchIndex = tailLength - prevPrevTouchIndex
