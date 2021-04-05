@@ -107,7 +107,7 @@ class GameView : ApplicationAdapter() {
         val currentMillisec = currentGameModel!!.timer - currentGameModel!!.timer.roundToInt()
         var brightness = when {
             currentGameModel!!.devMode -> { 0.8f }
-            currentGameModel!!.timer > currentGameModel!!.powerUpTimer + 1 -> {
+            currentGameModel!!.timer > currentGameModel!!.powerupTimer + 1 -> {
                 0.1.coerceAtLeast(currentMillisec + 0.5).toFloat()
             }
             else -> {
@@ -119,7 +119,7 @@ class GameView : ApplicationAdapter() {
         fontDrawer.setColor(1f, 1f, 0.2f, 1f)
 
         // draw game background, and change to secondaryBackground after powerUp has spawned
-        if (currentGameModel!!.timer <= currentGameModel!!.powerUpTimer + 1) {
+        if (currentGameModel!!.timer <= currentGameModel!!.powerupTimer + 1) {
             drawer.draw(textures["bkg"], 0f, 0f, screenWidth.toFloat(), screenHeight.toFloat())
         } else {
             drawer.draw(textures["secondaryBkg"], 0f, 0f, screenWidth.toFloat(), screenHeight.toFloat())
@@ -190,8 +190,9 @@ class GameView : ApplicationAdapter() {
                 return true
             }
 
+            // built in method for touch drag, which is most useful for our swipe/drag-based game
             override fun touchDragged(screenX: Int, screenY: Int, pointer: Int): Boolean {
-                currentGameModel?.checkTouchDirectionChange(screenX / scaleX, screenY / scaleY)
+                currentGameModel?.checkScoreStreak(screenX / scaleX, screenY / scaleY)
                 val touch = currentGameModel?.getCurrentTouch()
                 if (touch != null) {
                     touch.x = screenX / scaleX

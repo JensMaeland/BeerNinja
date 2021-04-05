@@ -10,7 +10,7 @@ const {
   generateListOfBeerObjects,
   getBottleList,
   getPowerupList,
-  setWinningPlayer,
+  awardPointsForBottle,
 } = require("./models/bottleModel");
 
 const { gameTick, gameDuration } = require("./entities/gameTick");
@@ -58,6 +58,8 @@ io.on("connection", (socket) => {
         resetPlayerScore(player.playerID);
         resetPlayerScore(enemy.playerID);
 
+        const powerupTimer = gameDuration / 2 + Math.random() * 10;
+
         socket.emit("setUpGame", {
           playerID: player.playerID,
           enemyID: enemy.playerID,
@@ -65,6 +67,7 @@ io.on("connection", (socket) => {
           bottleList: getBottleList(),
           powerupList: getPowerupList(player.playerID),
           gameDuration,
+          powerupTimer,
         });
         socket.to(player.enemyID).emit("setUpGame", {
           playerID: enemy.playerID,
@@ -73,6 +76,7 @@ io.on("connection", (socket) => {
           bottleList: getBottleList(),
           powerupList: getPowerupList(enemy.playerID),
           gameDuration,
+          powerupTimer,
         });
 
         gameTick(socket);
@@ -83,7 +87,10 @@ io.on("connection", (socket) => {
       console.log(green, "Starting solo game: " + socket.id);
       generateListOfBeerObjects(multiplayer, player);
 
+      const powerupTimer = gameDuration / 2 + Math.random() * 10;
+
       resetPlayerScore(player.playerID);
+
       socket.emit("setUpGame", {
         playerID: player.playerID,
         enemyID: "",
@@ -91,6 +98,7 @@ io.on("connection", (socket) => {
         bottleList: getBottleList(),
         powerupList: getPowerupList(player.playerID),
         gameDuration,
+        powerupTimer,
       });
 
       gameTick(socket, false);
@@ -108,7 +116,7 @@ io.on("connection", (socket) => {
       gray,
       "Caught Bottle: " + bottle.id + " by player " + bottle.playerID
     );
-    setWinningPlayer(bottle);
+    awardPointsForBottle(socket.id, bottle);
   });
 
   socket.on("disconnect", () => {

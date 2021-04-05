@@ -1,4 +1,4 @@
-package com.mygdx.beerninja
+package com.mygdx.beerninja.Entities
 
 import com.badlogic.gdx.graphics.Texture
 import kotlin.math.cos
@@ -11,6 +11,7 @@ class Hitbox(textures: HashMap<String, Texture>) {
     var bottom: Float = 0.0f
     var texture: Texture? = null
 
+    // apply some linear algebra to make sure hitboxes work on spinning bottles
     private fun rotateX(x: Float, y: Float, centerX: Float, centerY: Float, angle: Float): Float {
         val originX = x - centerX
         val originY = y - centerY

@@ -1,21 +1,22 @@
-package com.mygdx.beerninja
+package com.mygdx.beerninja.Entities
 
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.graphics.g2d.TextureRegion
 
-class Bottle(var bottleId: Int, var bottlePlayerId: String, y: Int, velocity: Int, private var bottleSpin: Float, var beerSpawnTime: Float, scale: Int, private var myPlayerId: String, private var textures: HashMap<String, Texture>) {
+class Bottle(var id: Int, var bottlePlayerId: String, y: Int, velocity: Int, private var bottleSpin: Float, var beerSpawnTime: Float, scale: Int, private var myPlayerId: String, private var textures: HashMap<String, Texture>) {
     var texture: TextureRegion? = null
     var collision = false
     var xStartPos: Int = 0
     private var yStartPos: Int
     private var bottleVelocity: Int
     private var hitbox = Hitbox(textures)
+    private var postCollisionVelocity = 50
 
     private fun getTexture(id: Int, player: String, me: String): TextureRegion {
         val beerTexture: Texture? = when {
-            player == "420" -> {
+            id == 420 -> {
                 textures["colada"]
             }
             id >= 50 -> {
@@ -31,7 +32,7 @@ class Bottle(var bottleId: Int, var bottlePlayerId: String, y: Int, velocity: In
         return TextureRegion(beerTexture)
     }
 
-    private fun getXPos(id: Int, player: String, me: String): Int {
+    private fun getXStart(id: Int, player: String, me: String): Int {
         return if (id >= 50) {
             if (id % 2 == 0) {
                 -texture!!.regionWidth
@@ -45,19 +46,21 @@ class Bottle(var bottleId: Int, var bottlePlayerId: String, y: Int, velocity: In
 
     fun getXOffset(gameTime: Float): Float {
         val offset = gameTime - beerSpawnTime
-        return if (bottleId >= 50) {
-            if (bottleId % 2 == 0) {
-                xStartPos + offset * bottleVelocity
-            } else xStartPos - offset * bottleVelocity
-        } else if (bottlePlayerId == myPlayerId) {
-            if (!collision) {
-                xStartPos + offset * bottleVelocity
-            } else xStartPos + offset * 50
-        } else {
-            if (!collision) {
-                xStartPos - offset * bottleVelocity
-            } else xStartPos - offset * 50
+        var direction = 1
+
+        // powerUp bottles
+        if (id >= 50 && id % 2 != 0) {
+            direction = -1
         }
+
+        // enemy bottles
+        if (bottlePlayerId != myPlayerId) {
+            direction = -1
+        }
+
+        return if (!collision) {
+            xStartPos + offset * direction * bottleVelocity
+        } else xStartPos + offset * direction * postCollisionVelocity
     }
 
     fun getYOffset(gameTime: Float): Float {
@@ -97,8 +100,8 @@ class Bottle(var bottleId: Int, var bottlePlayerId: String, y: Int, velocity: In
     }
 
     init {
-        texture = getTexture(bottleId, bottlePlayerId, myPlayerId)
-        xStartPos = getXPos(bottleId, bottlePlayerId, myPlayerId)
+        texture = getTexture(id, bottlePlayerId, myPlayerId)
+        xStartPos = getXStart(id, bottlePlayerId, myPlayerId)
         yStartPos = Gdx.graphics.height - scale * y
         bottleVelocity = velocity * scale
     }

@@ -9,9 +9,10 @@ import com.badlogic.gdx.audio.Sound
 import com.badlogic.gdx.graphics.g2d.BitmapFont
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator.FreeTypeFontParameter
+import com.mygdx.beerninja.Entities.RouteRequest
 import java.util.*
 
-class MenuView () {
+class MenuView {
     private var smallFont: BitmapFont
     private var largeFont: BitmapFont
     private var soundManager: AssetManager = AssetManager()
@@ -67,7 +68,7 @@ class MenuView () {
         }
 
 
-        // check for user touches on buttons, and set act on specified route request
+        // check for user touches on buttons, and act on specified route request
         Gdx.input.inputProcessor = object : InputAdapter() {
             override fun touchDown(screenX: Int, screenY: Int, pointer: Int, button: Int): Boolean {
                 if (!game.controller.connected) return true
@@ -84,7 +85,7 @@ class MenuView () {
 
     private fun onButtonClicked(game: GameView, routeRequest: RouteRequest) {
         when {
-            routeRequest.settings == false -> {
+            !routeRequest.settings -> {
                 game.controller.setUpGame(routeRequest, getUsername(), game.scale, game.drawer, soundManager, game.textures)
             }
             routeRequest.name == "Brukernavn" -> {
@@ -92,7 +93,7 @@ class MenuView () {
                 Gdx.input.getTextInput(usernameInput, "Brukernavn", getUsername(), "")
             }
             routeRequest.name == "Toppliste" -> {
-                //highscoreList()
+                //highscoreList
             }
         }
     }
@@ -111,7 +112,6 @@ class MenuView () {
     }
 
     fun renderGameoverScreen(game: GameView) {
-        println(game.currentGameModel!!.myResult)
         if (game.currentGameModel!!.myResult == null) {
             return
         }
@@ -122,12 +122,15 @@ class MenuView () {
         largeFont.draw(game.drawer, "Game over", buttonMargin, headerY)
         smallFont.draw(game.drawer, gameSummary, buttonMargin, headerY - buttonHeight)
 
+        // display the gameOver screen only for specified time
         gamesummaryTimer += Gdx.graphics.deltaTime
         if (gamesummaryTimer > 5) {
+            // set gameModel to null, making space for a new game
             game.currentGameModel = null
         }
     }
 
+    // username is stored locally on device in a text file
     private fun getUsername() : String {
         val usernameFile = Gdx.files.local("name.txt")
         return usernameFile.readString().split("\\r?\\n")[0]
@@ -143,11 +146,11 @@ class MenuView () {
             Gdx.input.getTextInput(usernameInput, "Brukernavn", "", "Hvordan skal andre spillere se deg?")
         }
 
-        // instancing and adding all route requests to the list
-        routeRequests.add(RouteRequest("Flerspiller", "Start flerspiller", true, false, false))
-        routeRequests.add(RouteRequest("Enspiller", "Start solo", false, false, false))
-        routeRequests.add(RouteRequest("Toppliste", "Toppliste", false, false, true))
-        routeRequests.add(RouteRequest("Brukernavn", "Endre brukernavn", true, false, true))
+        // instancing and adding all route requests to the list. These dictate the buttons on screen and what they do
+        routeRequests.add(RouteRequest("Flerspiller", "Start flerspiller", multiplayer = true, devMode = false, settings = false))
+        routeRequests.add(RouteRequest("Enspiller", "Start solo", multiplayer = false, devMode = false, settings = false))
+        routeRequests.add(RouteRequest("Toppliste", "Toppliste", multiplayer = false, devMode = false, settings = true))
+        routeRequests.add(RouteRequest("Brukernavn", "Endre brukernavn", multiplayer = true, devMode = false, settings = true))
         routeRequests.add(RouteRequest("Utviklermodus", "Dev modus", false, true, false))
         buttonsBottomY = buttonsTopY - ((routeRequests.size + 1) * buttonHeight)
 
@@ -171,6 +174,7 @@ class MenuView () {
     }
 }
 
+// helping class to have user input text
 private class UsernameInput : TextInputListener {
     override fun input(text: String) {
         if (text.isNotEmpty()) {

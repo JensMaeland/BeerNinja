@@ -4,6 +4,8 @@ import com.badlogic.gdx.assets.AssetManager
 import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.mygdx.beerninja.Entities.CaughtBottle
+import com.mygdx.beerninja.Entities.RouteRequest
 import io.socket.client.IO
 import io.socket.client.Socket
 import org.json.JSONArray
@@ -13,7 +15,7 @@ import java.util.*
 
 class GameController {
     private lateinit var socket: Socket
-    private val socketUrl = "http://46.101.52.4:8080"
+    private val socketUrl = "http://192.168.1.173:8080"
     private var mapper: ObjectMapper = ObjectMapper()
     var connected = false
 
@@ -48,6 +50,7 @@ class GameController {
                 val enemyID = receivedData.getString("enemyID")
                 val enemyUsername = receivedData.getString("enemyUsername")
                 val gameDuration = receivedData["gameDuration"] as Int
+                val powerupTimer = (receivedData["powerupTimer"] as Double).toFloat()
                 val bottles = receivedData["bottleList"] as JSONArray
                 val powerups = receivedData["powerupList"] as JSONArray
 
@@ -57,7 +60,8 @@ class GameController {
                 }
                 // create a new game model with provided data
                 loadingGame = null
-                newGameModel = GameModel(this, playerID, enemyID, username, enemyUsername, bottleData, powerupData, gameRequest.multiplayer, gameRequest.devMode, gameDuration, scale, drawer, soundManager, textures)
+                newGameModel = GameModel(this, playerID, enemyID, username, enemyUsername, bottleData, powerupData,
+                        gameRequest.multiplayer, gameRequest.devMode, gameDuration, powerupTimer, scale, drawer, soundManager, textures)
                 if (newGameModel != null) {
                     // setup all socket/controller functions that will continuously communicate with server through the game
                     getTouches(newGameModel!!)
@@ -119,9 +123,9 @@ class GameController {
     private fun listenForGameOver(currentGameModel: GameModel) {
         socket.on("gameSummary") { args ->
             newGameModel = null
-            socket.off("touches");
-            socket.off("points");
-            socket.off("gameSummary");
+            socket.off("touches")
+            socket.off("points")
+            socket.off("gameSummary")
             val receivedData = args[0] as JSONObject
             currentGameModel.myResult = receivedData["player"] as JSONObject
             if (currentGameModel.enemyID.isNotEmpty()) {

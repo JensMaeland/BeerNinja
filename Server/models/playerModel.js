@@ -32,11 +32,15 @@ const setPlayerTouches = (playerID, touchData) => {
   player.touches.currentTouchIndex = touchData.currentTouchIndex;
 };
 
-const incrementPlayerScore = (playerID, points = 1) => {
+const changePlayerScore = (playerID, points = 1) => {
   const player = getPlayer(playerID);
   if (!player) return;
 
   player.score += points;
+
+  if (player.score < 0) {
+    player.score = 0;
+  }
 };
 
 const resetPlayerScore = (playerID) => {
@@ -44,6 +48,7 @@ const resetPlayerScore = (playerID) => {
   if (!player) return;
 
   player.score = 0;
+  player.bottles = [];
 };
 
 module.exports = {
@@ -52,5 +57,5 @@ module.exports = {
   getPlayer,
   resetPlayerScore,
   removePlayer,
-  incrementPlayerScore,
+  changePlayerScore,
 };

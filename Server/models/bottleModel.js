@@ -1,4 +1,4 @@
-const { getPlayer, incrementPlayerScore } = require("./playerModel");
+const { getPlayer, changePlayerScore } = require("./playerModel");
 
 const { Beer } = require("../entities/beer");
 const { gameDuration } = require("../entities/gameTick");
@@ -17,14 +17,29 @@ const getPowerupList = (playerID) => {
   return powerups;
 };
 
-const isBottleInOpponentsList = (playerID, bottle) => {
+const isBottleInEnemyList = (playerID, bottle) => {
   const player = getPlayer(playerID);
-
   if (!player) return false;
 
-  for (let alreadyCaughtBottle of player.bottles) {
+  const enemy = getPlayer(player.enemyID);
+  if (!enemy) return false;
+
+  for (let alreadyCaughtBottle of enemy.bottles) {
     if (alreadyCaughtBottle.id == bottle.id) {
-      return true;
+      // enemy has caught bottle before the player
+      if (alreadyCaughtBottle.time <= bottle.time) {
+        return true;
+      } else {
+        // enemy has caught bottle after the player
+        removeBottle(enemy.enemyID);
+
+        if (enemy.playerID === bottle.playerID) {
+          changePlayerScore(enemy.enemyID, -bottle.points);
+        } else {
+          changePlayerScore(enemy.playerID, bottle.points);
+        }
+        return false;
+      }
     }
   }
   return false;
@@ -34,6 +49,12 @@ const appendBottle = (playerID, bottle) => {
   const player = getPlayer(playerID);
 
   player.bottles.push(bottle);
+};
+
+const removeBottle = (playerID) => {
+  const player = getPlayer(playerID);
+
+  delete player.bottles[playerID];
 };
 
 const generateListOfBeerObjects = (
@@ -68,7 +89,7 @@ const generateListOfBeerObjects = (
       i,
       // seconds to spawn
       Math.round(
-        (i * (gameDuration / numberOfBeerObjects) + Math.random()) * 10000
+        (i * ((gameDuration - 5) / numberOfBeerObjects) + Math.random()) * 10000
       ) / 10000,
       //offset Y(from top)
       100 + Math.floor(Math.random() * standardOffsetY),
@@ -103,14 +124,19 @@ const generateListOfBeerObjects = (
 Funksjonen tar inn en flaske, og finner spilleren som skal få et poeng. 
 
  */
-const setWinningPlayer = (bottle) => {
-  const winner = getPlayer(bottle.playerID);
+const awardPointsForBottle = (playerID, bottle) => {
+  const player = getPlayer(playerID);
+  const bottleOwner = getPlayer(bottle.playerID);
 
-  if (!winner) return;
+  if (!player || !bottleOwner) return;
 
-  if (!isBottleInOpponentsList(winner.playerID, bottle)) {
-    appendBottle(winner.playerID, bottle);
-    incrementPlayerScore(winner.playerID, bottle.points);
+  if (!isBottleInEnemyList(player.playerID, bottle)) {
+    appendBottle(player.playerID, bottle);
+    if (player.playerID === bottleOwner.playerID) {
+      changePlayerScore(player.playerID, bottle.points);
+    } else {
+      changePlayerScore(player.playerID, -bottle.points);
+    }
   }
 };
 
@@ -118,5 +144,5 @@ module.exports = {
   generateListOfBeerObjects,
   getBottleList,
   getPowerupList,
-  setWinningPlayer,
+  awardPointsForBottle,
 };

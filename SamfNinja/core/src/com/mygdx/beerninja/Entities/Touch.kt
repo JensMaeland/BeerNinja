@@ -1,4 +1,4 @@
-package com.mygdx.beerninja
+package com.mygdx.beerninja.Entities
 
 import com.badlogic.gdx.graphics.Texture
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
