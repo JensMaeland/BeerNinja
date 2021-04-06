@@ -85,7 +85,7 @@ class GameView : ApplicationAdapter() {
             currentGameModel!!.myResult == null -> {
                 // increment the gameModel timer
                 currentGameModel!!.timer += Gdx.graphics.deltaTime
-                // render all elements of the gameView
+                // render the GAME SCENE with all its layers
                 renderGUI()
                 renderBeerSprites()
                 renderUserTouches()
