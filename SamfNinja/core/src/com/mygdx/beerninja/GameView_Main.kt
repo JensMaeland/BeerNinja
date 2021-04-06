@@ -76,26 +76,28 @@ class GameView : ApplicationAdapter() {
         drawer.begin()
 
         // as long as no gameModel exists, display the main menu only
-        if (currentGameModel == null) {
-            menu.render(this)
-        }
+        when {
+            currentGameModel == null -> {
+                menu.render(this)
+            }
 
-        // check if game is ongoing, meaning the gameModel timer is less than game duration
-        else if (currentGameModel!!.timer < currentGameModel!!.gameDuration) {
-            // increment the gameModel timer
-            currentGameModel!!.timer += Gdx.graphics.deltaTime
-            // render all elements of the gameView
-            renderGUI()
-            renderBeerSprites()
-            renderUserTouches()
-            // continuously check hitBoxes in the gameModel
-            currentGameModel!!.checkHitboxes(currentGameModel!!.timer, scale, currentGameModel!!.devMode)
-            controller.sendTouches(currentGameModel!!)
-        }
+            // check if game is ongoing, meaning the gameModel timer is less than game duration
+            currentGameModel!!.timer < currentGameModel!!.gameDuration -> {
+                // increment the gameModel timer
+                currentGameModel!!.timer += Gdx.graphics.deltaTime
+                // render all elements of the gameView
+                renderGUI()
+                renderBeerSprites()
+                renderUserTouches()
+                // continuously check hitBoxes in the gameModel
+                currentGameModel!!.checkHitboxes(currentGameModel!!.timer, scale, currentGameModel!!.devMode)
+                controller.sendTouches(currentGameModel!!)
+            }
 
-        // after the game is done, display the gameOver screen
-        else {
-            menu.renderGameoverScreen(this)
+            // after the game is done, display the gameOver screen
+            else -> {
+                menu.renderGameoverScreen(this)
+            }
         }
 
         drawer.end()

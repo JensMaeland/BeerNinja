@@ -1,6 +1,6 @@
 package com.mygdx.beerninja
 
-class Tutorial {
+class TutorialView {
 
     // TODO:
      fun render() {

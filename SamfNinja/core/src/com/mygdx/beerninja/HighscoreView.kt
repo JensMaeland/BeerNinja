@@ -3,7 +3,7 @@ package com.mygdx.beerninja
 import java.lang.reflect.Array
 import java.util.ArrayList
 
-class Highscore {
+class HighscoreView {
     var oldList: ArrayList<Array>
     var newList: ArrayList<Array>
 
