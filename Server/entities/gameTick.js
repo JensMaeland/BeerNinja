@@ -1,4 +1,5 @@
 const { getPlayer, removePlayer } = require("../models/playerModel");
+const { Player } = require("./player");
 
 const red = "\x1b[31m%s\x1b[0m";
 
@@ -7,18 +8,19 @@ const gameDuration = 40;
 const dtMultiplayer = 1000 / 20;
 const dtSolo = 1000 / 5;
 
-const gameTick = (socket, multiplayer = true, timer = 0) => {
-  if (timer < gameDuration * 1000) {
+const gameTick = (socket, multiplayer = true, timer = 0, enemyID = null) => {
+  const player = getPlayer(socket.id);
+  const enemy = enemyID
+    ? getPlayer(enemyID)
+    : multiplayer && player
+    ? getPlayer(player.enemyID)
+    : null;
+
+  if (timer < gameDuration * 1000 && player && (!multiplayer || enemy)) {
     timer += multiplayer ? dtMultiplayer : dtSolo;
 
     setTimeout(
       () => {
-        const player = getPlayer(socket.id);
-        if (!player) return;
-
-        const enemy = multiplayer && getPlayer(player.enemyID);
-        if (multiplayer && !enemy) return;
-
         if (enemy) {
           enemy.touches.touches && socket.emit("touches", enemy.touches);
           player.touches.touches &&
@@ -40,30 +42,43 @@ const gameTick = (socket, multiplayer = true, timer = 0) => {
           });
         }
 
-        gameTick(socket, multiplayer, timer);
+        gameTick(
+          socket,
+          multiplayer,
+          timer,
+          multiplayer ? player.enemyID : null
+        );
       },
       multiplayer ? dtMultiplayer : dtSolo
     );
   } else {
-    const player = getPlayer(socket.id);
-    const enemy = multiplayer && player && getPlayer(player.enemyID);
+    multiplayer &&
+      player &&
+      enemy &&
+      console.log(
+        red,
+        "Game over: " + player.playerID + " and " + enemy.playerID
+      );
 
-    multiplayer
-      ? console.log(
-          red,
-          "Game over: " + player.playerID + " and " + player.enemyID
-        )
-      : console.log(red, "Game over: " + player.playerID);
+    !multiplayer && player && console.log(red, "Game over: " + player.playerID);
 
-    player && socket.emit("gameSummary", { player, enemy });
+    !player || (multiplayer && !enemy);
+    console.log("Game cancelled..");
+
+    player &&
+      socket.emit("gameSummary", {
+        player,
+        enemy: enemy || new Player(enemyID, "", socket.id),
+      });
     multiplayer &&
       enemy &&
-      socket
-        .to(enemy.playerID)
-        .emit("gameSummary", { enemy: player, player: enemy });
+      socket.to(enemy.playerID).emit("gameSummary", {
+        enemy: player || new Player(socket.id, "", enemyID),
+        player: enemy,
+      });
 
-    removePlayer(player.playerID);
-    multiplayer && removePlayer(enemy.playerID);
+    player && removePlayer(player.playerID);
+    multiplayer && enemy && removePlayer(enemy.playerID);
   }
 };
 

@@ -128,8 +128,9 @@ class GameController {
             socket.off("gameSummary")
             val receivedData = args[0] as JSONObject
             currentGameModel.myResult = receivedData["player"] as JSONObject
-            if (currentGameModel.enemyID.isNotEmpty()) {
-                currentGameModel.enemyResult = receivedData["enemy"] as JSONObject
+            val enemyData = receivedData["enemy"] as JSONObject?
+            if (enemyData != null) {
+                currentGameModel.enemyResult = enemyData
             }
         }
     }

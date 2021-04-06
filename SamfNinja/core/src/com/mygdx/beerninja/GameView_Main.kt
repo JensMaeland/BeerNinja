@@ -81,8 +81,8 @@ class GameView : ApplicationAdapter() {
                 menu.render(this)
             }
 
-            // check if game is ongoing, meaning the gameModel timer is less than game duration
-            currentGameModel!!.timer < currentGameModel!!.gameDuration -> {
+            // check if game is ongoing, meaning controller has not received gameSummary with result
+            currentGameModel!!.myResult == null -> {
                 // increment the gameModel timer
                 currentGameModel!!.timer += Gdx.graphics.deltaTime
                 // render all elements of the gameView
