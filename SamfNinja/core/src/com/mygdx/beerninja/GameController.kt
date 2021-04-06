@@ -15,7 +15,7 @@ import java.util.*
 
 class GameController {
     private lateinit var socket: Socket
-    private val socketUrl = "http://192.168.1.173:8080"
+    private val socketUrl = "http://46.101.52.4:8080"
     private var mapper: ObjectMapper = ObjectMapper()
     var connected = false
 
