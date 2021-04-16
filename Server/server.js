@@ -13,7 +13,9 @@ const {
   awardPointsForBottle,
 } = require("./models/bottleModel");
 
-const { gameTick, gameDuration } = require("./entities/gameTick");
+const { gameTick, gameDuration } = require("./gameTick");
+
+const { getHighscore } = require("./highscore");
 
 const app = require("express")();
 const httpServer = require("http").createServer(app);
@@ -117,6 +119,12 @@ io.on("connection", (socket) => {
       "Caught Bottle: " + bottle.id + " by player " + bottle.playerID
     );
     awardPointsForBottle(socket.id, bottle);
+  });
+
+  socket.on("highscore", () => {
+    socket.emit("highscore", getHighscore());
+
+    console.log(yellow, "Sending higscore to" + socket.id);
   });
 
   socket.on("disconnect", () => {

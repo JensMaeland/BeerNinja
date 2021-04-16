@@ -1,7 +1,7 @@
 const { getPlayer, changePlayerScore } = require("./playerModel");
 
 const { Beer } = require("../entities/beer");
-const { gameDuration } = require("../entities/gameTick");
+const { gameDuration } = require("../gameTick");
 
 const numberOfBeerObjects = 50;
 

@@ -1,5 +1,6 @@
-const { getPlayer, removePlayer } = require("../models/playerModel");
-const { Player } = require("./player");
+const { getPlayer, removePlayer } = require("./models/playerModel");
+const { Player } = require("./entities/player");
+const { addHighscore } = require("./highscore");
 
 const red = "\x1b[31m%s\x1b[0m";
 
@@ -76,6 +77,8 @@ const gameTick = (socket, multiplayer = true, timer = 0, enemyID = null) => {
         enemy: player || new Player(socket.id, "", enemyID),
         player: enemy,
       });
+
+    addHighscore(player, enemy);
 
     player && removePlayer(player.playerID);
     multiplayer && enemy && removePlayer(enemy.playerID);
