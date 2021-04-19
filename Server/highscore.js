@@ -26,7 +26,6 @@ const getHighscore = () => {
   //TODO: Only return a subset with the highest scores, ascending
   const data = fs.readFileSync('./db/highscore');
 
-  console.log(JSON.parse(data.toString() || '{}'));
   return JSON.parse(data.toString() || '{}');
 };
 
