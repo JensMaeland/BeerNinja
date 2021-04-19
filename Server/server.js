@@ -122,9 +122,11 @@ io.on("connection", (socket) => {
   });
 
   socket.on("highscore", () => {
-    socket.emit("highscore", getHighscore());
+    const list = getHighscore();
+    console.log(list);
+    socket.emit("highscore", list);
 
-    console.log(yellow, "Sending higscore to" + socket.id);
+    console.log(yellow, "Sending highscore to" + socket.id);
   });
 
   socket.on("disconnect", () => {

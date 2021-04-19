@@ -22,6 +22,7 @@ class GameController {
     private var enemyCaughtBottles = ArrayList<JSONObject>()
     var newGameModel: GameModel? = null
     var loadingGame: RouteRequest? = null
+    var highscoreList: JSONObject? = null
 
     // socket connects to server initially
     private fun connect() {
@@ -132,6 +133,15 @@ class GameController {
             if (enemyData != null) {
                 currentGameModel.enemyResult = enemyData
             }
+        }
+    }
+
+    fun getHighscoreList() {
+        socket.emit("highscore")
+
+        socket.on("highscore") { args ->
+            highscoreList = args[0] as JSONObject
+            socket.off("highscore")
         }
     }
 

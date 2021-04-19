@@ -93,7 +93,8 @@ class MenuView {
                 Gdx.input.getTextInput(usernameInput, "Brukernavn", getUsername(), "")
             }
             routeRequest.name == "Toppliste" -> {
-                //highscoreList
+                game.controller.getHighscoreList()
+                //highscorelist view
             }
         }
     }

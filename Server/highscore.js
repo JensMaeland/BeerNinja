@@ -23,11 +23,11 @@ const addHighscore = (player1, player2) => {
 };
 
 const getHighscore = () => {
-  //TODO: Only return a subset with the highest scores
+  //TODO: Only return a subset with the highest scores, ascending
+  const data = fs.readFileSync('./db/highscore');
 
-  fs.readFile('./db/highscore', (err, data) => {
-    return JSON.parse(data || '{}');
-  });
+  console.log(JSON.parse(data.toString() || '{}'));
+  return JSON.parse(data.toString() || '{}');
 };
 
 module.exports = {
