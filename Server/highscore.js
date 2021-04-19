@@ -1,20 +1,33 @@
-// see player class in entity
-const addHighscore = (player1, player2) => {
-  //TODO: Create string for both players with Username + Score
+const fs = require('fs');
 
-  //TODO: Check if highscore txt file exists
-  //..Create new file or append strings to end of existing file
-  return null;
+const addHighscore = (player1, player2) => {
+  if (!player1 && !player2) return;
+
+  //TODO: Create requirement for score, to reduce storage space
+
+  fs.readFile('./db/highscore', (err, data) => {
+    let list = JSON.parse(data);
+
+    const currentPlayer1 = player1 ? list[player1.username] : 0;
+    const currentPlayer2 = player2 ? list[player2.username] : 0;
+
+    if (player1 && player1.score && (!currentPlayer1 || currentPlayer1 < player1.score)) {
+      list[player1.username] = player1.score;
+    }
+    if (player2 && player2.score && (!currentPlayer2 || currentPlayer2 < player2.score)) {
+      list[player2.username] = player2.score;
+    }
+
+    fs.writeFile('./db/highscore', JSON.stringify(list), err => { })
+  });
 };
 
 const getHighscore = () => {
-  // highscore example: [{Username: "Peder", Score: "42"}, {Username: "Stine", Score: "99"}]
-  const highscore = [];
+  //TODO: Only return a subset with the highest scores
 
-  //TODO: Get the highscore txt file if it exists
-  //..Loop through the file and add every line to highscore list
-  //..Sort the highscore list from highest to lowest, and slice to only 30? elements
-  return highscore;
+  fs.readFile('./db/highscore', (err, data) => {
+    return JSON.parse(data || '{}');
+  });
 };
 
 module.exports = {

@@ -14,8 +14,8 @@ const gameTick = (socket, multiplayer = true, timer = 0, enemyID = null) => {
   const enemy = enemyID
     ? getPlayer(enemyID)
     : multiplayer && player
-    ? getPlayer(player.enemyID)
-    : null;
+      ? getPlayer(player.enemyID)
+      : null;
 
   if (timer < gameDuration * 1000 && player && (!multiplayer || enemy)) {
     timer += multiplayer ? dtMultiplayer : dtSolo;
@@ -63,8 +63,9 @@ const gameTick = (socket, multiplayer = true, timer = 0, enemyID = null) => {
 
     !multiplayer && player && console.log(red, "Game over: " + player.playerID);
 
-    !player || (multiplayer && !enemy);
-    console.log("Game cancelled..");
+    if (!player || (multiplayer && !enemy)) {
+      console.log("Game cancelled..");
+    }
 
     player &&
       socket.emit("gameSummary", {

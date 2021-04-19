@@ -50,10 +50,10 @@ io.on("connection", (socket) => {
         console.log(
           green,
           "Players: " +
-            socket.id +
-            " and " +
-            player.enemyID +
-            " matched up for game.."
+          socket.id +
+          " and " +
+          player.enemyID +
+          " matched up for game.."
         );
         generateListOfBeerObjects(multiplayer, player);
 

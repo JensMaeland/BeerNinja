@@ -12,7 +12,6 @@ import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 import java.util.*
-import kotlin.collections.ArrayList
 import kotlin.math.sign
 
 class GameModel(private var controller: GameController, var playerID: String, var enemyID: String, var username: String, var enemyUsername: String, bottleData: ArrayList<JSONObject>, powerupData: ArrayList<JSONObject>, var multiplayer: Boolean, var devMode: Boolean, var gameDuration: Int, var powerupTimer: Float, scale: Int, private var drawer: SpriteBatch, private var soundManager: AssetManager, textures: HashMap<String, Texture>) {
