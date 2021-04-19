@@ -1,6 +1,7 @@
 ## Java
 
 name.txt
+/android/assets/name.txt
 
 *.class
 *.war
