@@ -10,6 +10,7 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator.FreeTypeFontParameter
 import com.mygdx.beerninja.Entities.RouteRequest
+import org.json.JSONArray
 import java.util.*
 
 class MenuView {
@@ -53,7 +54,23 @@ class MenuView {
         smallFont.draw(game.drawer, "Gruppe 20", buttonMargin, headerY - buttonHeight)
         smallFont.setColor(1f, 1f, 1f, 1f)
 
-        if (game.controller.connected) {
+        if (!game.controller.connected) {
+            smallFont.draw(game.drawer, "Kobler til server..", buttonMargin, buttonStartY.toFloat())
+        }
+        else if (game.controller.highscoreList != null){
+            val scores: JSONArray? = game.controller.highscoreList?.names()
+
+            if (scores != null) {
+                for (i in 1 until scores.length()) {
+                    val username: String = scores.getString(i)
+                    val score: String = game.controller.highscoreList!!.getString(username)
+                    smallFont.draw(game.drawer, i.toString() + ".plass: " + username + " - " + score , buttonMargin, (4 * buttonStartY / 3) - i * 50f * game.scale)
+                }
+                smallFont.setColor(1f, 1f, 1f, 0.5f)
+                smallFont.draw(game.drawer, "< Tilbake", buttonMargin, (4 * buttonStartY / 3) - scores.length() * 50f * game.scale)
+            }
+        }
+        else {
             // draw buttons for each routeRequest, meaning a game or a setting
             for (i in routeRequests.indices) {
                 val buttonYPos = (buttonStartY - buttonHeight * (i + 1)).toFloat()
@@ -63,15 +80,17 @@ class MenuView {
                 smallFont.draw(game.drawer, "> " + routeRequests[i].description, buttonMargin, buttonYPos)
             }
         }
-        else {
-            smallFont.draw(game.drawer, "Kobler til server..", buttonMargin, buttonStartY.toFloat())
-        }
 
 
         // check for user touches on buttons, and act on specified route request
         Gdx.input.inputProcessor = object : InputAdapter() {
             override fun touchDown(screenX: Int, screenY: Int, pointer: Int, button: Int): Boolean {
                 if (!game.controller.connected) return true
+
+                if (game.controller.highscoreList != null) {
+                    game.controller.highscoreList = null
+                    return true
+                }
 
                 val y = Gdx.graphics.height - screenY
                 if (y in buttonsBottomY until buttonsTopY) {
@@ -94,7 +113,6 @@ class MenuView {
             }
             routeRequest.name == "Toppliste" -> {
                 game.controller.getHighscoreList()
-                //highscorelist view
             }
         }
     }

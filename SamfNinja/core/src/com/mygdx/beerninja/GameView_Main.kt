@@ -54,7 +54,7 @@ class GameView : ApplicationAdapter() {
         controller = GameController()
 
         // setting backgrounds and textures to correct png images
-        val textureNames = listOf("bkg", "secondaryBkg", "menuBkg", "gameoverBkg", "myTouch", "enemyTouch", "hitbox", "colada", "dahls", "pils", "dag")
+        val textureNames = listOf("bkg", "secondaryBkg", "menuBkg", "gameoverBkg", "myTouch", "enemyTouch", "hitbox", "samfkort", "dahls", "pils", "dag", "tail1", "tail2")
         textures = HashMap()
         for (textureName: String in textureNames) {
             textures[textureName] = Texture("$textureName.png")
@@ -177,6 +177,11 @@ class GameView : ApplicationAdapter() {
             val bottleX = beerBottle.getXOffset(currentGameModel!!.timer)
             val bottleY = beerBottle.getYOffset(currentGameModel!!.timer)
             val spin = beerBottle.getSpin(currentGameModel!!.timer)
+
+            val tailWidth = (beerBottle.tail!!.regionWidth * scale * 2).toFloat()
+            val tailHeight = (beerBottle.tail!!.regionHeight * scale * 2).toFloat()
+            val tailOffset = beerBottle.getTailOffset(bottleX)
+            drawer.draw(beerBottle.tail, tailOffset, bottleY + height / 2, tailWidth, tailHeight / 2, tailWidth, tailHeight, 1f, 1f, spin)
             drawer.draw(beerBottle.texture, bottleX, bottleY, width / 2, height / 2, width, height, 1f, 1f, spin)
         }
     }

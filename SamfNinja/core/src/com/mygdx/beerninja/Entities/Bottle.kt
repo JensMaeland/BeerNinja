@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion
 
 class Bottle(var id: Int, var bottlePlayerId: String, y: Int, velocity: Int, private var bottleSpin: Float, var beerSpawnTime: Float, scale: Int, private var myPlayerId: String, private var textures: HashMap<String, Texture>) {
     var texture: TextureRegion? = null
+    var tail: TextureRegion? = null
     var collision = false
     var xStartPos: Int = 0
     private var yStartPos: Int
@@ -17,7 +18,7 @@ class Bottle(var id: Int, var bottlePlayerId: String, y: Int, velocity: Int, pri
     private fun getTexture(id: Int, player: String, me: String): TextureRegion {
         val beerTexture: Texture? = when {
             id == 420 -> {
-                textures["colada"]
+                textures["samfkort"]
             }
             id >= 50 -> {
                 textures["dahls"]
@@ -27,6 +28,26 @@ class Bottle(var id: Int, var bottlePlayerId: String, y: Int, velocity: Int, pri
             }
             else -> {
                 textures["dag"]
+            }
+        }
+        return TextureRegion(beerTexture)
+    }
+
+    private fun getTail(id: Int, player: String, me: String): TextureRegion {
+        val beerTexture: Texture? = when {
+            id == 420 -> {
+                textures["tail1"]
+            }
+            id >= 50 -> {
+                if (id % 2 == 0) {
+                    textures["tail1"]
+                } else textures["tail2"]
+            }
+            player == me -> {
+                textures["tail1"]
+            }
+            else -> {
+                textures["tail2"]
             }
         }
         return TextureRegion(beerTexture)
@@ -43,6 +64,21 @@ class Bottle(var id: Int, var bottlePlayerId: String, y: Int, velocity: Int, pri
             Gdx.graphics.width
         }
     }
+
+    fun getTailOffset(bottleOffset: Float): Float {
+        // powerUp tails
+        if (id >= 50 && id % 2 != 0) {
+            return bottleOffset + tail!!.regionWidth - texture!!.regionWidth / 2
+        }
+
+        // enemy tails
+        if (bottlePlayerId != myPlayerId) {
+            return bottleOffset + tail!!.regionWidth - texture!!.regionWidth / 2
+        }
+
+        return bottleOffset - tail!!.regionWidth + texture!!.regionWidth / 2
+    }
+
 
     fun getXOffset(gameTime: Float): Float {
         val offset = gameTime - beerSpawnTime
@@ -65,7 +101,7 @@ class Bottle(var id: Int, var bottlePlayerId: String, y: Int, velocity: Int, pri
 
     fun getYOffset(gameTime: Float): Float {
         val offset = (gameTime - beerSpawnTime) / 2
-        return yStartPos - offset * offset * 3 * bottleVelocity
+        return yStartPos - offset * offset * bottleVelocity * 3
     }
 
     fun getHitbox(gameTime: Float, drawer: SpriteBatch, devMode: Boolean, scale: Int): Hitbox {
@@ -90,17 +126,18 @@ class Bottle(var id: Int, var bottlePlayerId: String, y: Int, velocity: Int, pri
         val offset = gameTime - beerSpawnTime
         return if (bottlePlayerId == myPlayerId) {
             if (!collision) {
-                -offset * bottleSpin * 200
+                -offset * bottleSpin * 150
             } else bottleSpin * 30
         } else {
             if (!collision) {
-                offset * bottleSpin * 200
+                offset * bottleSpin * 150
             } else -bottleSpin * 30
         }
     }
 
     init {
         texture = getTexture(id, bottlePlayerId, myPlayerId)
+        tail = getTail(id, bottlePlayerId, myPlayerId)
         xStartPos = getXStart(id, bottlePlayerId, myPlayerId)
         yStartPos = Gdx.graphics.height - scale * y
         bottleVelocity = velocity * scale
