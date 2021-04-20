@@ -19,7 +19,7 @@ const addHighscore = (player1, player2) => {
     }
 
     // sort the new highscore object
-    const sorted = Object.entries(maxSpeed)
+    const sorted = Object.entries(list)
       .sort(([, a], [, b]) => b - a)
       .reduce((r, [k, v]) => ({ ...r, [k]: v }), {});
 
