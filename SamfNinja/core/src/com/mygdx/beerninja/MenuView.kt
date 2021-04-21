@@ -20,6 +20,7 @@ class MenuView (val game: GameView) {
     private var tutorial: TutorialView? = null
 
     var routeRequests: ArrayList<RouteRequest> = ArrayList()
+    private var loadingscreenTimer = 0f
     private var gamesummaryTimer = 0f
     var showTutorial = false
 
@@ -35,6 +36,7 @@ class MenuView (val game: GameView) {
     fun render() {
         // if a newGameModel is created after controller has received data, set this to the current one
         if (game.controller.newGameModel != null) {
+            loadingscreenTimer = 0f
             game.currentGameModel = game.controller.newGameModel
             // play sounds starting and during the game
             if (!game.controller.newGameModel!!.devMode && soundManager.isLoaded("theMidnight.mp3")) {
@@ -45,8 +47,15 @@ class MenuView (val game: GameView) {
         }
         // if no newGameModel exists, but a game is still loading, render the loading screen
         else if (game.controller.loadingGame != null) {
-               renderLoadingScreen()
-            return
+            loadingscreenTimer -= Gdx.graphics.deltaTime
+
+            if (loadingscreenTimer < 0f) {
+                game.controller.loadingGame = null
+            }
+            else {
+                renderLoadingScreen()
+                return
+            }
         }
 
         // draw the menu background and header
@@ -84,6 +93,12 @@ class MenuView (val game: GameView) {
             override fun touchDown(screenX: Int, screenY: Int, pointer: Int, button: Int): Boolean {
                 if (!game.controller.connected) return true
 
+                if (game.controller.loadingGame != null && screenY >= game.screenHeight - 120f * game.scale) {
+                    loadingscreenTimer = 0f
+                    game.controller.loadingGame = null
+                    return true
+                }
+
                 if (game.controller.highscoreList != null) {
                     game.controller.highscoreList = null
                     return true
@@ -102,6 +117,7 @@ class MenuView (val game: GameView) {
     private fun onButtonClicked(routeRequest: RouteRequest) {
         when {
             !routeRequest.settings -> {
+                loadingscreenTimer = 30f
                 game.controller.setUpGame(routeRequest, getUsername(), game.scale, game.drawer, soundManager, game.textures)
             }
             routeRequest.name == "Brukernavn" -> {
@@ -124,9 +140,14 @@ class MenuView (val game: GameView) {
             largeFont.draw(game.drawer, "Flerspiller", buttonMargin, headerY)
             smallFont.draw(game.drawer, "Ser etter motspiller..", buttonMargin, headerY - buttonHeight)
 
+            smallFont.setColor(1f, 1f, 1f, 0.5f)
+            smallFont.draw(game.drawer, "< Tilbake", buttonMargin, 100f * game.scale)
         } else {
             largeFont.draw(game.drawer, "Enspiller", buttonMargin, headerY)
             smallFont.draw(game.drawer, "Laster..", buttonMargin, headerY - buttonHeight)
+
+            smallFont.setColor(1f, 1f, 1f, 0.5f)
+            smallFont.draw(game.drawer, "< Tilbake", buttonMargin, 100f * game.scale)
         }
     }
 
