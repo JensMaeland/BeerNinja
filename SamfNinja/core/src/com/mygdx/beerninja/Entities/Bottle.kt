@@ -4,6 +4,7 @@ import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.graphics.g2d.TextureRegion
+import kotlin.math.abs
 
 class Bottle(var id: Int, var bottlePlayerId: String, y: Int, velocity: Int, private var bottleSpin: Float, var beerSpawnTime: Float, scale: Int, private var myPlayerId: String, private var textures: HashMap<String, Texture>) {
     var texture: TextureRegion? = null
@@ -17,10 +18,10 @@ class Bottle(var id: Int, var bottlePlayerId: String, y: Int, velocity: Int, pri
 
     private fun getTexture(id: Int, player: String, me: String): TextureRegion {
         val beerTexture: Texture? = when {
-            id == 420 -> {
+            id % 420 == 0 && id != 0 -> {
                 textures["samfkort"]
             }
-            id >= 50 -> {
+            abs(id) >= 50 -> {
                 textures["dahls"]
             }
             player == me -> {
@@ -79,10 +80,14 @@ class Bottle(var id: Int, var bottlePlayerId: String, y: Int, velocity: Int, pri
         return bottleOffset - tail!!.regionWidth + texture!!.regionWidth / 2
     }
 
-
-    fun getXOffset(gameTime: Float): Float {
+    fun getXOffset(gameTime: Float, scale: Int): Float {
         val offset = gameTime - beerSpawnTime
         var direction = 1
+
+        // tutorial bottles
+        if (id < 0) {
+            return (Gdx.graphics.width - texture!!.regionWidth * scale) / 2f
+        }
 
         // powerUp bottles
         if (id >= 50 && id % 2 != 0) {
@@ -100,6 +105,11 @@ class Bottle(var id: Int, var bottlePlayerId: String, y: Int, velocity: Int, pri
     }
 
     fun getYOffset(gameTime: Float): Float {
+        // tutorial bottles
+        if (id < 0) {
+            return (Gdx.graphics.height / 2f) + (Gdx.graphics.width * 0.14f) - 200f
+        }
+
         val offset = (gameTime - beerSpawnTime) / 2
         return yStartPos - offset * offset * bottleVelocity * 3
     }
@@ -107,7 +117,7 @@ class Bottle(var id: Int, var bottlePlayerId: String, y: Int, velocity: Int, pri
     fun getHitbox(gameTime: Float, drawer: SpriteBatch, devMode: Boolean, scale: Int): Hitbox {
         val beerWidth = texture!!.regionWidth * scale
         val beerHeight = texture!!.regionHeight * scale
-        val minX = getXOffset(gameTime)
+        val minX = getXOffset(gameTime, scale)
         val minY = getYOffset(gameTime)
         val spinAngle = getSpin(gameTime)
         hitbox.updateHitbox(minX, minY, beerWidth, beerHeight, spinAngle)

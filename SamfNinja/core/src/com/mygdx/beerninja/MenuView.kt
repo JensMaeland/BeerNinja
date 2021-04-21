@@ -13,24 +13,26 @@ import com.mygdx.beerninja.Entities.RouteRequest
 import org.json.JSONArray
 import java.util.*
 
-class MenuView {
+class MenuView (val game: GameView) {
     private var smallFont: BitmapFont
     private var largeFont: BitmapFont
     private var soundManager: AssetManager = AssetManager()
+    private var tutorial: TutorialView? = null
 
     var routeRequests: ArrayList<RouteRequest> = ArrayList()
     private var gamesummaryTimer = 0f
+    var showTutorial = false
 
     // placement of text and button elements on screen
     val buttonHeight = (Gdx.graphics.width * 0.14).toInt()
     private val buttonMargin = (Gdx.graphics.width * 0.05).toFloat()
-    private val headerY = (3 * Gdx.graphics.height / 4).toFloat()
-    private val buttonStartY = Gdx.graphics.height / 2
+    private val headerY = ((3 * Gdx.graphics.height / 4)  + buttonHeight).toFloat()
+    private val buttonStartY = (Gdx.graphics.height / 2) + buttonHeight
     val buttonsTopY = buttonStartY + buttonHeight / 2
     var buttonsBottomY = 0
 
     // menu renders only if no currentGameMode is initialized
-    fun render(game: GameView) {
+    fun render() {
         // if a newGameModel is created after controller has received data, set this to the current one
         if (game.controller.newGameModel != null) {
             game.currentGameModel = game.controller.newGameModel
@@ -43,7 +45,7 @@ class MenuView {
         }
         // if no newGameModel exists, but a game is still loading, render the loading screen
         else if (game.controller.loadingGame != null) {
-               renderLoadingScreen(game)
+               renderLoadingScreen()
             return
         }
 
@@ -51,26 +53,22 @@ class MenuView {
         game.drawer.draw(game.textures["menuBkg"], 0f, 0f, game.screenWidth.toFloat(), game.screenHeight.toFloat())
         largeFont.draw(game.drawer, "SamfNinja", buttonMargin, headerY)
         smallFont.setColor(1f, 1f, 1f, 0.5f)
-        smallFont.draw(game.drawer, "Gruppe 20", buttonMargin, headerY - buttonHeight)
-        smallFont.setColor(1f, 1f, 1f, 1f)
 
         if (!game.controller.connected) {
-            smallFont.draw(game.drawer, "Kobler til server..", buttonMargin, buttonStartY.toFloat())
+            smallFont.draw(game.drawer, "Kobler til server..", buttonMargin, headerY - buttonHeight)
         }
-        else if (game.controller.highscoreList != null){
-            val scores: JSONArray? = game.controller.highscoreList?.names()
-
-            if (scores != null) {
-                for (i in 1 until scores.length()) {
-                    val username: String = scores.getString(i)
-                    val score: String = game.controller.highscoreList!!.getString(username)
-                    smallFont.draw(game.drawer, i.toString() + ".plass: " + username + " - " + score , buttonMargin, (4 * buttonStartY / 3) - i * 50f * game.scale)
-                }
-                smallFont.setColor(1f, 1f, 1f, 0.5f)
-                smallFont.draw(game.drawer, "< Tilbake", buttonMargin, (4 * buttonStartY / 3) - scores.length() * 50f * game.scale)
-            }
+        // tutorial
+        else if (showTutorial) {
+            tutorial?.render(this, game, smallFont, buttonStartY.toFloat() - 200f, buttonMargin, headerY - buttonHeight)
+            return
+        }
+        // highscore list fetches every time user clicks the button. If fetched, show the new list
+        else if (game.controller.highscoreList != null) {
+            renderHighscoreList()
         }
         else {
+            smallFont.draw(game.drawer, "Gruppe 20", buttonMargin, headerY - buttonHeight)
+            smallFont.setColor(1f, 1f, 1f, 1f)
             // draw buttons for each routeRequest, meaning a game or a setting
             for (i in routeRequests.indices) {
                 val buttonYPos = (buttonStartY - buttonHeight * (i + 1)).toFloat()
@@ -80,7 +78,6 @@ class MenuView {
                 smallFont.draw(game.drawer, "> " + routeRequests[i].description, buttonMargin, buttonYPos)
             }
         }
-
 
         // check for user touches on buttons, and act on specified route request
         Gdx.input.inputProcessor = object : InputAdapter() {
@@ -95,14 +92,14 @@ class MenuView {
                 val y = Gdx.graphics.height - screenY
                 if (y in buttonsBottomY until buttonsTopY) {
                     val gameModeIndex = (routeRequests.size - 1) - ((y - buttonsBottomY) / buttonHeight)
-                    onButtonClicked(game, routeRequests[gameModeIndex])
+                    onButtonClicked(routeRequests[gameModeIndex])
                 }
                 return true
             }
         }
     }
 
-    private fun onButtonClicked(game: GameView, routeRequest: RouteRequest) {
+    private fun onButtonClicked(routeRequest: RouteRequest) {
         when {
             !routeRequest.settings -> {
                 game.controller.setUpGame(routeRequest, getUsername(), game.scale, game.drawer, soundManager, game.textures)
@@ -114,10 +111,13 @@ class MenuView {
             routeRequest.name == "Toppliste" -> {
                 game.controller.getHighscoreList()
             }
+            routeRequest.name == "Tutorial" -> {
+                showTutorial = true
+            }
         }
     }
 
-    private fun renderLoadingScreen(game: GameView) {
+    private fun renderLoadingScreen() {
         game.drawer.draw(game.textures["menuBkg"], 0f, 0f, game.screenWidth.toFloat(), game.screenHeight.toFloat())
 
         if (game.controller.loadingGame!!.multiplayer) {
@@ -130,7 +130,24 @@ class MenuView {
         }
     }
 
-    fun renderGameoverScreen(game: GameView) {
+    private fun renderHighscoreList() {
+        val scores: JSONArray? = game.controller.highscoreList?.names()
+
+        smallFont.draw(game.drawer, "Toppliste", buttonMargin, headerY - buttonHeight)
+        smallFont.setColor(1f, 1f, 1f, 1f)
+
+        if (scores != null) {
+            for (i in 0 until scores.length()) {
+                val username: String = scores.getString(i)
+                val score: String = game.controller.highscoreList!!.getString(username)
+                smallFont.draw(game.drawer, (i + 1).toString() + ".plass: " + username + " - " + score , buttonMargin, buttonStartY - (i - 2) * 60f * game.scale)
+            }
+            smallFont.setColor(1f, 1f, 1f, 0.5f)
+            smallFont.draw(game.drawer, "< Tilbake", buttonMargin, buttonStartY - (scores.length() - 2) * 60f * game.scale)
+        }
+    }
+
+    fun renderGameoverScreen() {
         if (game.currentGameModel!!.myResult == null) {
             return
         }
@@ -163,6 +180,8 @@ class MenuView {
             usernameFile.writeString("", false)
             val usernameInput = UsernameInput()
             Gdx.input.getTextInput(usernameInput, "Brukernavn", "", "Hvordan skal andre spillere se deg?")
+            // no username indicates a new player, therefore showing tutorial
+            showTutorial = true
         }
 
         // instancing and adding all route requests to the list. These dictate the buttons on screen and what they do
@@ -170,6 +189,7 @@ class MenuView {
         routeRequests.add(RouteRequest("Enspiller", "Start solo", multiplayer = false, devMode = false, settings = false))
         routeRequests.add(RouteRequest("Toppliste", "Toppliste", multiplayer = false, devMode = false, settings = true))
         routeRequests.add(RouteRequest("Brukernavn", "Endre brukernavn", multiplayer = true, devMode = false, settings = true))
+        routeRequests.add(RouteRequest("Tutorial", "Tutorial", multiplayer = false, devMode = false, settings = true))
         routeRequests.add(RouteRequest("Utviklermodus", "Dev modus", false, true, false))
         buttonsBottomY = buttonsTopY - ((routeRequests.size + 1) * buttonHeight)
 
@@ -190,6 +210,8 @@ class MenuView {
         smallFont = fontGenerator.generateFont(smallFontParameter)
         largeFont = fontGenerator.generateFont(largeFontParameter)
         fontGenerator.dispose()
+
+        tutorial = TutorialView(game)
     }
 }
 

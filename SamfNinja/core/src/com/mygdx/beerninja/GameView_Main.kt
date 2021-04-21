@@ -48,8 +48,7 @@ class GameView : ApplicationAdapter() {
         fontParameter.size = (Gdx.graphics.width * 0.05).toInt()
         fontDrawer = fontGenerator.generateFont(fontParameter)
         fontGenerator.dispose()
-        // instancing the main menu
-        menu = MenuView()
+
         // instancing a game controller, automatically connecting to server
         controller = GameController()
 
@@ -58,8 +57,11 @@ class GameView : ApplicationAdapter() {
         textures = HashMap()
         for (textureName: String in textureNames) {
             textures[textureName] = Texture("$textureName.png")
-
         }
+
+        // instancing the main menu
+        menu = MenuView(this)
+
         scoreBars = ArrayList()
         // adding the different textures for the scoreBar to a list
         scoreBars.add(Texture("bar2_0.png"))
@@ -78,7 +80,7 @@ class GameView : ApplicationAdapter() {
         // as long as no gameModel exists, display the main menu only
         when {
             currentGameModel == null -> {
-                menu.render(this)
+                menu.render()
             }
 
             // check if game is ongoing, meaning controller has not received gameSummary with result
@@ -96,7 +98,7 @@ class GameView : ApplicationAdapter() {
 
             // after the game is done, display the gameOver screen
             else -> {
-                menu.renderGameoverScreen(this)
+                menu.renderGameoverScreen()
             }
         }
 
@@ -174,14 +176,14 @@ class GameView : ApplicationAdapter() {
         for (beerBottle in currentGameModel!!.spawn(currentGameModel!!.devMode)) {
             val width = (beerBottle.texture!!.regionWidth * scale).toFloat()
             val height = (beerBottle.texture!!.regionHeight * scale).toFloat()
-            val bottleX = beerBottle.getXOffset(currentGameModel!!.timer)
+            val bottleX = beerBottle.getXOffset(currentGameModel!!.timer, 1)
             val bottleY = beerBottle.getYOffset(currentGameModel!!.timer)
             val spin = beerBottle.getSpin(currentGameModel!!.timer)
 
             val tailWidth = (beerBottle.tail!!.regionWidth * scale * 2).toFloat()
             val tailHeight = (beerBottle.tail!!.regionHeight * scale * 2).toFloat()
             val tailOffset = beerBottle.getTailOffset(bottleX)
-            drawer.draw(beerBottle.tail, tailOffset, bottleY + height / 2, tailWidth, tailHeight / 2, tailWidth, tailHeight, 1f, 1f, spin)
+            //drawer.draw(beerBottle.tail, tailOffset, bottleY + height / 2, tailWidth, tailHeight / 2, tailWidth, tailHeight, 1f, 1f, spin)
             drawer.draw(beerBottle.texture, bottleX, bottleY, width / 2, height / 2, width, height, 1f, 1f, spin)
         }
     }

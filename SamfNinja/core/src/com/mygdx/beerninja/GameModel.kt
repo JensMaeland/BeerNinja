@@ -99,7 +99,7 @@ class GameModel(private var controller: GameController, var playerID: String, va
         for (bottle in bottles) {
             if (bottle.id == caughtBottle.id) {
                 bottles.remove(bottle)
-                caughtBottle.xcoor = bottle.getXOffset(timer)
+                caughtBottle.xcoor = bottle.getXOffset(timer, 1)
                 caughtBottle.ycoor = bottle.getYOffset(timer)
                 latestCaughtBottle = caughtBottle
                 break
@@ -131,7 +131,7 @@ class GameModel(private var controller: GameController, var playerID: String, va
             if (touch.display && hitbox.left <= touchX && touchX <= hitbox.right) {
                 if (hitbox.bottom <= touchY && touchY <= hitbox.top) {
                     // if touch hits a bottle, create a new caughtBottle, and call the belonging function
-                    val caughtBottle = CaughtBottle(beerBottle.id, gameTimer, beerBottle.getXOffset(gameTimer), beerBottle.getYOffset(gameTimer), beerBottle.bottlePlayerId, streak + 1)
+                    val caughtBottle = CaughtBottle(beerBottle.id, gameTimer, beerBottle.getXOffset(gameTimer, 1), beerBottle.getYOffset(gameTimer), beerBottle.bottlePlayerId, streak + 1)
                     playerCaughtBottle(caughtBottle)
                     latestCaughtBottle = caughtBottle
                     // the streak increases for each bottle caught
@@ -154,7 +154,7 @@ class GameModel(private var controller: GameController, var playerID: String, va
                         if (hitbox.right > obstacle.left && hitbox.left < obstacle.right) {
                             if (hitbox.top > obstacle.bottom && hitbox.bottom < obstacle.top) {
                                 // set x-origin to collision point and set collision flag for the bottle
-                                beerBottle.xStartPos = beerBottle.getXOffset(gameTimer).toInt()
+                                beerBottle.xStartPos = beerBottle.getXOffset(gameTimer, 1).toInt()
                                 beerBottle.collision = true
                             }
                         }
