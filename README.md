@@ -15,9 +15,9 @@ Prerequisites that need to be downloaded and installed:
 1. Navigate to the folder "SamfNinja" and open it in Android Studio. 
 2. If this is the first time using Android Studio, you need to configure the emulator. If already done, move on to the next step. To configure the Android emulator: 
 
-        3.1 Press "Add Configuration". 
-        3.2 Press "+" and "Android App". 
-        3.3 Fill in the missing information, as seen in \autoref{fig:emulator}.
+        2.1 Press "Add Configuration". 
+        2.2 Press "+" and "Android App". 
+        2.3 Fill in the missing information, as seen in \autoref{fig:emulator}.
 
 3. Press the green triangle in the top menu to run the client with Android emulator.
 
