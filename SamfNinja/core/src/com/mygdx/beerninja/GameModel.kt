@@ -1,6 +1,7 @@
 package com.mygdx.beerninja
 
 import com.badlogic.gdx.Gdx
+import com.badlogic.gdx.InputAdapter
 import com.badlogic.gdx.assets.AssetManager
 import com.badlogic.gdx.audio.Sound
 import com.badlogic.gdx.graphics.Texture
@@ -66,6 +67,35 @@ class GameModel(private var controller: GameController, var playerID: String, va
 
         return currentBottles
     }
+
+    fun updateTouches(scaleX: Int, scaleY: Int) {
+        // get touches
+        Gdx.input.inputProcessor = object : InputAdapter() {
+            override fun touchDown(screenX: Int, screenY: Int, pointer: Int, button: Int): Boolean {
+                streak = 0
+                return true
+            }
+
+            // built in method for touch drag, which is most useful for our swipe/drag-based game
+            override fun touchDragged(screenX: Int, screenY: Int, pointer: Int): Boolean {
+                checkScoreStreak(screenX / scaleX, screenY / scaleY)
+                val touch = getCurrentTouch()
+                if (touch != null) {
+                    touch.x = screenX / scaleX
+                    touch.y = screenY / scaleY
+                    touch.display = true
+                }
+                return true
+            }
+
+            override fun touchUp(screenX: Int, screenY: Int, pointer: Int, button: Int): Boolean {
+                hideTouches()
+                return false
+            }
+        }
+
+    }
+
 
     // remove any caught bottle form the bottles list, and send to the controller and server
     private fun playerCaughtBottle(caughtBottle: CaughtBottle) {

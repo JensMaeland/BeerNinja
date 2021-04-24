@@ -189,30 +189,7 @@ class GameView : ApplicationAdapter() {
         val scaleX = Gdx.graphics.width / 100
         val scaleY = Gdx.graphics.height / 100
 
-        // get touches
-        Gdx.input.inputProcessor = object : InputAdapter() {
-            override fun touchDown(screenX: Int, screenY: Int, pointer: Int, button: Int): Boolean {
-                currentGameModel?.streak = 0
-                return true
-            }
-
-            // built in method for touch drag, which is most useful for our swipe/drag-based game
-            override fun touchDragged(screenX: Int, screenY: Int, pointer: Int): Boolean {
-                currentGameModel?.checkScoreStreak(screenX / scaleX, screenY / scaleY)
-                val touch = currentGameModel?.getCurrentTouch()
-                if (touch != null) {
-                    touch.x = screenX / scaleX
-                    touch.y = screenY / scaleY
-                    touch.display = true
-                }
-                return true
-            }
-
-            override fun touchUp(screenX: Int, screenY: Int, pointer: Int, button: Int): Boolean {
-                currentGameModel?.hideTouches()
-                return false
-            }
-        }
+        currentGameModel?.updateTouches(scaleX, scaleY)
 
         // render user touches
         var prevX = 0
