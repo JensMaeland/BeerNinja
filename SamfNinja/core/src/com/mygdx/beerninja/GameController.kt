@@ -77,7 +77,7 @@ class GameController {
 
     fun sendTouches(currentGameModel: GameModel) {
         if (!currentGameModel.multiplayer) return
-
+        
         val touchObject = JSONObject()
         val touches = mapper.writeValueAsString(currentGameModel.touches)
         touchObject.put("touches", touches)

@@ -1,6 +1,6 @@
 const { getPlayer, changePlayerScore } = require("./playerModel");
 
-const { Beer } = require("../entities/beer");
+const { Bottle } = require("../entities/bottle");
 const { gameDuration } = require("../gameTick");
 
 const numberOfBeerObjects = 50;
@@ -84,7 +84,7 @@ const generateListOfBeerObjects = (
     }
 
     //Creates new beer object
-    spriteList[i] = new Beer(
+    spriteList[i] = new Bottle(
       // id
       i,
       // seconds to spawn
@@ -101,7 +101,7 @@ const generateListOfBeerObjects = (
     );
 
     //Creates new powerup beer object
-    powerupSpriteList[i] = new Beer(
+    powerupSpriteList[i] = new Bottle(
       // id
       numberOfBeerObjects + i,
       // seconds to spawn

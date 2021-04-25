@@ -1,4 +1,4 @@
-class Beer {
+class Bottle {
   constructor(id, secondsToSpawn, offsetY, playerID, velocity, spin) {
     this.id = id; //int
     this.secondsToSpawn = secondsToSpawn; //float
@@ -10,5 +10,5 @@ class Beer {
 }
 
 module.exports = {
-  Beer,
+  Bottle,
 };
