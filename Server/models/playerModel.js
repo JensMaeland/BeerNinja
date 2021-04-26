@@ -1,19 +1,30 @@
 const { Player } = require("../entities/player");
 
+/* Player Model
+ Contains state and methods to manipulate state of all players
+ Uses an object containing Player class as values
+ Format of players object: {"playerID": player}
+
+ Players are only added here after a game is requested, and deleted after game
+ The player object contains players from all concurrent games, and therefore acts singleton-like
+*/
+
 const players = {};
+
+const getPlayers = () => players;
 
 const getPlayer = (playerID) => players[playerID];
 
-const addPlayer = (playerID, username) => {
-  const enemy = Object.values(players).filter((p) => p.enemyID === "");
+const addPlayer = (playerID, username, multiplayer) => {
+  const enemy = Object.values(players).filter((p) => p.multiplayer && p.enemyID === "");
 
   let player;
-  if (enemy.length) {
-    player = new Player(playerID, username, enemy[0].playerID);
+  if (multiplayer && enemy.length) {
+    player = new Player(playerID, username, true, enemy[0].playerID);
     players[playerID] = player;
     enemy[0].enemyID = playerID;
   } else {
-    player = new Player(playerID, username);
+    player = new Player(playerID, username, multiplayer);
     players[playerID] = player;
   }
 

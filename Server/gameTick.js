@@ -9,6 +9,19 @@ const gameDuration = 40;
 const dtMultiplayer = 1000 / 20;
 const dtSolo = 1000 / 5;
 
+
+/* Game Tick / Game Loop
+ Each instance controls a game, responsible for updating clients with a given interval
+ Uses state from the two main model-components: Player- and bottle-model
+
+ Socket Structure:
+
+  - Touches (emit to client)
+  - Points (emit to client)
+  - GameSummary (emit to client)
+*/
+
+
 const gameTick = (socket, multiplayer = true, timer = 0, enemyID = null) => {
   const player = getPlayer(socket.id);
   const enemy = enemyID
@@ -43,6 +56,7 @@ const gameTick = (socket, multiplayer = true, timer = 0, enemyID = null) => {
           });
         }
 
+        // move on to next iteration of the gameTick
         gameTick(
           socket,
           multiplayer,

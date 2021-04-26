@@ -6,18 +6,13 @@ const {
   removePlayer,
 } = require("./models/playerModel");
 
-const {
-  generateListOfBeerObjects,
-  getBottleList,
-  getPowerupList,
-  awardPointsForBottle,
-} = require("./models/bottleModel");
+const { BottleModel } = require("./models/bottleModel");
 
 const { gameTick, gameDuration } = require("./gameTick");
 
 const { getHighscore } = require("./highscore");
 
-const app = require("express")();
+const app = require("express");
 const httpServer = require("http").createServer(app);
 const io = require("socket.io")(httpServer, {});
 
@@ -28,10 +23,29 @@ const gray = "\x1b[2m%s\x1b[0m";
 
 const port = 8080;
 
+
+/* SERVER Entrypoint / Socket FSM
+ Main Component of the Server
+ Responsible for setting up connections and acting on incoming messages from clients
+
+ Structure:
+
+ - Connection (from client)
+    - SetupGame (request by client)
+    - Touches (from client)
+    - CaughtBottle (from client)
+    - Highscore (request by client)
+    - Disconnect (from client)
+*/
+
 /*Server now listens to port*/
 httpServer.listen(port, () => {
   console.log(yellow, "Tapping fresh beer to start serving..");
 });
+
+const currentGames = {};
+
+const endGame = id => delete currentGames[id];
 
 io.on("connection", (socket) => {
   console.log(green, "Player connecting to server: " + socket.id);
@@ -41,11 +55,21 @@ io.on("connection", (socket) => {
     const gameType = multiplayer ? "multiplayer-game: " : "solo-game: ";
     console.log(gray, "Player requesting new " + gameType + socket.id);
 
-    const player = addPlayer(socket.id, username);
+    let player = getPlayer(socket.id);
+
+    if (!player) {
+      player = addPlayer(socket.id, username, multiplayer);
+    }
 
     if (multiplayer) {
       if (player.enemyID) {
         const enemy = getPlayer(player.enemyID);
+
+        const bottleState = new BottleModel(player);
+        player.gameID = bottleState.id;
+        enemy.gameID = bottleState.id;
+        currentGames[bottleState.id] = bottleState;
+
 
         console.log(
           green,
@@ -55,7 +79,6 @@ io.on("connection", (socket) => {
           player.enemyID +
           " matched up for game.."
         );
-        generateListOfBeerObjects(multiplayer, player);
 
         resetPlayerScore(player.playerID);
         resetPlayerScore(enemy.playerID);
@@ -66,8 +89,8 @@ io.on("connection", (socket) => {
           playerID: player.playerID,
           enemyID: enemy.playerID,
           enemyUsername: enemy.username,
-          bottleList: getBottleList(),
-          powerupList: getPowerupList(player.playerID),
+          bottleList: bottleState.bottleList,
+          powerupList: bottleState.getPowerupList(player.playerID),
           gameDuration,
           powerupTimer,
         });
@@ -75,19 +98,23 @@ io.on("connection", (socket) => {
           playerID: enemy.playerID,
           enemyID: player.playerID,
           enemyUsername: player.username,
-          bottleList: getBottleList(),
-          powerupList: getPowerupList(enemy.playerID),
+          bottleList: bottleState.bottleList,
+          powerupList: bottleState.getPowerupList(enemy.playerID),
           gameDuration,
           powerupTimer,
         });
 
-        gameTick(socket);
+        // Setting up a gameTick, to frequently update clients on gameState
+        gameTick(socket, true);
       } else {
         console.log(gray, "Waiting for player 2: " + socket.id);
       }
     } else {
       console.log(green, "Starting solo game: " + socket.id);
-      generateListOfBeerObjects(multiplayer, player);
+
+      const bottleState = new BottleModel(player);
+      player.gameID = bottleState.id;
+      currentGames[bottleState.id] = bottleState;
 
       const powerupTimer = gameDuration / 2 + Math.random() * 10;
 
@@ -97,14 +124,22 @@ io.on("connection", (socket) => {
         playerID: player.playerID,
         enemyID: "",
         enemyUsername: "",
-        bottleList: getBottleList(),
-        powerupList: getPowerupList(player.playerID),
+        bottleList: bottleState.bottleList,
+        powerupList: bottleState.getPowerupList(player.playerID),
         gameDuration,
         powerupTimer,
       });
 
+      // Setting up a gameTick, to frequently update clients on gameState
       gameTick(socket, false);
     }
+
+    console.log(
+      yellow,
+      "Currently " +
+      Object.keys(currentGames).length +
+      " concurrent games."
+    );
   });
 
   socket.on("touches", (touches) => {
@@ -112,18 +147,20 @@ io.on("connection", (socket) => {
   });
 
   socket.on("caughtBottle", (bottleData) => {
+    const player = getPlayer(socket.id);
     const bottle = JSON.parse(bottleData);
 
     console.log(
       gray,
       "Caught Bottle: " + bottle.id + " by player " + bottle.playerID
     );
-    awardPointsForBottle(socket.id, bottle);
+
+    const bottleState = currentGames[player.gameID];
+    bottleState.awardPointsForBottle(player.playerID, bottle);
   });
 
   socket.on("highscore", () => {
     const list = getHighscore();
-    console.log(list);
     socket.emit("highscore", list);
 
     console.log(yellow, "Sending highscore to" + socket.id);
@@ -132,6 +169,11 @@ io.on("connection", (socket) => {
   socket.on("disconnect", () => {
     console.log(red, "Player out of beer: " + socket.id);
 
-    removePlayer(socket.id);
+    const player = getPlayer(socket.id);
+
+    if (player) {
+      endGame(player.gameID);
+      removePlayer(player.playerID);
+    }
   });
 });

@@ -1,7 +1,8 @@
 class Player {
-  constructor(id, name, enemyID = "") {
+  constructor(id, name, multiplayer = true, enemyID = "") {
     this.playerID = id;
     this.username = name;
+    this.multiplayer = multiplayer;
     this.enemyID = enemyID;
     this.score = 0;
     this.bottles = [];
