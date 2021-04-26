@@ -13,12 +13,12 @@ const numberOfBeerObjects = 50;
 
 */
 
-class BottleModel {
+class GameModel {
   constructor(player) {
     this.bottleList = [];
     this.powerupList = [];
     this.id = player.playerID.split("").reverse().join("");
-    this.generateListOfBeerObjects(player);
+    this.generateListOfBottles(player);
   }
 
   getPowerupList = (playerID) => {
@@ -56,19 +56,7 @@ class BottleModel {
     return false;
   };
 
-  appendBottle = (playerID, bottle) => {
-    const player = getPlayer(playerID);
-
-    player.bottles.push(bottle);
-  };
-
-  removeBottle = (playerID) => {
-    const player = getPlayer(playerID);
-
-    delete player.bottles[playerID];
-  };
-
-  generateListOfBeerObjects = (
+  generateListOfBottles = (
     player,
     standardOffsetY = 800,
     standardVelocity = 350
@@ -148,8 +136,20 @@ class BottleModel {
       }
     }
   };
+
+  appendBottle = (playerID, bottle) => {
+    const player = getPlayer(playerID);
+
+    player.bottles.push(bottle);
+  };
+
+  removeBottle = (playerID) => {
+    const player = getPlayer(playerID);
+
+    delete player.bottles[playerID];
+  };
 };
 
 module.exports = {
-  BottleModel
+  GameModel
 };

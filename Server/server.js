@@ -6,11 +6,11 @@ const {
   removePlayer,
 } = require("./models/playerModel");
 
-const { BottleModel } = require("./models/bottleModel");
+const { GameModel } = require("./models/gameModel");
 
 const { gameTick, gameDuration } = require("./gameTick");
 
-const { getHighscore } = require("./highscore");
+const { getHighscores } = require("./highscore");
 
 const app = require("express");
 const httpServer = require("http").createServer(app);
@@ -65,10 +65,10 @@ io.on("connection", (socket) => {
       if (player.enemyID) {
         const enemy = getPlayer(player.enemyID);
 
-        const bottleState = new BottleModel(player);
-        player.gameID = bottleState.id;
-        enemy.gameID = bottleState.id;
-        currentGames[bottleState.id] = bottleState;
+        const gameModel = new GameModel(player);
+        player.gameID = gameModel.id;
+        enemy.gameID = gameModel.id;
+        currentGames[gameModel.id] = gameModel;
 
 
         console.log(
@@ -89,8 +89,8 @@ io.on("connection", (socket) => {
           playerID: player.playerID,
           enemyID: enemy.playerID,
           enemyUsername: enemy.username,
-          bottleList: bottleState.bottleList,
-          powerupList: bottleState.getPowerupList(player.playerID),
+          bottleList: gameModel.bottleList,
+          powerupList: gameModel.getPowerupList(player.playerID),
           gameDuration,
           powerupTimer,
         });
@@ -98,8 +98,8 @@ io.on("connection", (socket) => {
           playerID: enemy.playerID,
           enemyID: player.playerID,
           enemyUsername: player.username,
-          bottleList: bottleState.bottleList,
-          powerupList: bottleState.getPowerupList(enemy.playerID),
+          bottleList: gameModel.bottleList,
+          powerupList: gameModel.getPowerupList(enemy.playerID),
           gameDuration,
           powerupTimer,
         });
@@ -112,9 +112,9 @@ io.on("connection", (socket) => {
     } else {
       console.log(green, "Starting solo game: " + socket.id);
 
-      const bottleState = new BottleModel(player);
-      player.gameID = bottleState.id;
-      currentGames[bottleState.id] = bottleState;
+      const gameModel = new GameModel(player);
+      player.gameID = gameModel.id;
+      currentGames[gameModel.id] = gameModel;
 
       const powerupTimer = gameDuration / 2 + Math.random() * 10;
 
@@ -124,8 +124,8 @@ io.on("connection", (socket) => {
         playerID: player.playerID,
         enemyID: "",
         enemyUsername: "",
-        bottleList: bottleState.bottleList,
-        powerupList: bottleState.getPowerupList(player.playerID),
+        bottleList: gameModel.bottleList,
+        powerupList: gameModel.getPowerupList(player.playerID),
         gameDuration,
         powerupTimer,
       });
@@ -155,12 +155,12 @@ io.on("connection", (socket) => {
       "Caught Bottle: " + bottle.id + " by player " + bottle.playerID
     );
 
-    const bottleState = currentGames[player.gameID];
-    bottleState.awardPointsForBottle(player.playerID, bottle);
+    const gameModel = currentGames[player.gameID];
+    gameModel.awardPointsForBottle(player.playerID, bottle);
   });
 
   socket.on("highscore", () => {
-    const list = getHighscore();
+    const list = getHighscores();
     socket.emit("highscore", list);
 
     console.log(yellow, "Sending highscore to" + socket.id);

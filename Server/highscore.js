@@ -27,7 +27,7 @@ const addHighscore = (player1, player2) => {
   });
 };
 
-const getHighscore = () => {
+const getHighscores = () => {
   const data = fs.readFileSync('./db/highscore');
 
   const list = JSON.parse(data.toString() || '{}');
@@ -42,5 +42,5 @@ const getHighscore = () => {
 
 module.exports = {
   addHighscore,
-  getHighscore,
+  getHighscores,
 };
