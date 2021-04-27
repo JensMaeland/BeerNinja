@@ -1,13 +1,13 @@
-const { getPlayer, removePlayer } = require("./models/playerModel");
-const { Player } = require("./entities/player");
-const { addHighscore } = require("./highscore");
+const { getPlayer, removePlayer } = require("../model/playerModel");
+const { Player } = require("../entities/player");
+const { addHighscore } = require("../highscore");
 
 const red = "\x1b[31m%s\x1b[0m";
 
+// game tick rules
 const gameDuration = 40;
-
-const dtMultiplayer = 1000 / 20;
-const dtSolo = 1000 / 5;
+const multiplayerFrequency = 1000 / 20;
+const soloFrequency = 1000 / 5;
 
 
 /* Game Tick / Game Loop
@@ -31,7 +31,7 @@ const gameTick = (socket, multiplayer = true, timer = 0, enemyID = null) => {
       : null;
 
   if (timer < gameDuration * 1000 && player && (!multiplayer || enemy)) {
-    timer += multiplayer ? dtMultiplayer : dtSolo;
+    timer += multiplayer ? multiplayerFrequency : soloFrequency;
 
     setTimeout(
       () => {
@@ -64,7 +64,7 @@ const gameTick = (socket, multiplayer = true, timer = 0, enemyID = null) => {
           multiplayer ? player.enemyID : null
         );
       },
-      multiplayer ? dtMultiplayer : dtSolo
+      multiplayer ? multiplayerFrequency : soloFrequency
     );
   } else {
     multiplayer &&

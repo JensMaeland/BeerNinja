@@ -1,9 +1,12 @@
 const { getPlayer, changePlayerScore } = require("./playerModel");
 
 const { Bottle } = require("../entities/bottle");
-const { gameDuration } = require("../gameTick");
+const { gameDuration } = require("../controller/gameTick");
 
+// game rules
 const numberOfBeerObjects = 50;
+const powerupDuration = 6;
+
 
 /* Bottle Model
  Contains state and methods to manipulate state of the bottles (sprites) for a given game
@@ -21,7 +24,7 @@ class GameModel {
     this.generateListOfBottles(player);
   }
 
-  getPowerupList = (playerID) => {
+  getPowerupList = playerID => {
     let powerups = this.powerupList;
     powerups.forEach((p) => (p.playerID = playerID));
 
@@ -63,52 +66,37 @@ class GameModel {
   ) => {
     console.log("Generating bottles..");
 
-    const powerupDuration = 6;
-    var playerOne = Math.floor(numberOfBeerObjects / 2);
+    let spriteList = new Array(numberOfBeerObjects);
+    let powerupSpriteList = new Array(numberOfBeerObjects);
 
-    var spriteList = new Array(numberOfBeerObjects);
-    var powerupSpriteList = new Array(numberOfBeerObjects);
-
-    let playerID;
+    let playerID, playerOne = Math.floor(numberOfBeerObjects / 2);
 
     for (let i = 0; i < numberOfBeerObjects; i++) {
-      if (!player.enemyID) {
-        playerID = player.playerID;
-      } else if (Math.random() > 0.5 && playerOne) {
+      if (!player.enemyID || Math.random() > 0.5 && playerOne) {
         playerID = player.playerID;
         playerOne--;
       } else {
         playerID = player.enemyID;
       }
 
+      const spawnTime = Math.round(
+        (i * ((gameDuration - 5) / numberOfBeerObjects) + Math.random()) * 10000
+      ) / 10000;
+
+      const powerupSpawnTime = Math.round((i / powerupDuration + Math.random()) * 10000) / 10000;
+
       //Creates new beer object
       spriteList[i] = new Bottle(
-        // id
-        i,
-        // seconds to spawn
-        Math.round(
-          (i * ((gameDuration - 5) / numberOfBeerObjects) + Math.random()) * 10000
-        ) / 10000,
-        //offset Y(from top)
+        i, playerID, spawnTime,
         100 + Math.floor(Math.random() * standardOffsetY),
-        //Player
-        playerID,
-        //Sprite Velocity
         standardVelocity + Math.floor(Math.random() * 250),
         Math.PI * Math.random()
       );
 
       //Creates new powerup beer object
       powerupSpriteList[i] = new Bottle(
-        // id
-        numberOfBeerObjects + i,
-        // seconds to spawn
-        Math.round((i / powerupDuration + Math.random()) * 10000) / 10000,
-        //offset Y(from top)
+        numberOfBeerObjects + i, "", powerupSpawnTime,
         100 + Math.floor(Math.random() * standardOffsetY),
-        //Player
-        "",
-        //Sprite Velocity
         standardVelocity + Math.floor(Math.random() * 150),
         Math.PI * Math.random()
       );
@@ -139,12 +127,14 @@ class GameModel {
 
   appendBottle = (playerID, bottle) => {
     const player = getPlayer(playerID);
+    if (!player) return;
 
     player.bottles.push(bottle);
   };
 
-  removeBottle = (playerID) => {
+  removeBottle = playerID => {
     const player = getPlayer(playerID);
+    if (!player) return;
 
     delete player.bottles[playerID];
   };

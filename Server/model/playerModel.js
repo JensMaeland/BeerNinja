@@ -11,9 +11,7 @@ const { Player } = require("../entities/player");
 
 const players = {};
 
-const getPlayers = () => players;
-
-const getPlayer = (playerID) => players[playerID];
+const getPlayer = playerID => players[playerID];
 
 const addPlayer = (playerID, username, multiplayer) => {
   const enemy = Object.values(players).filter((p) => p.multiplayer && p.enemyID === "");
@@ -31,7 +29,7 @@ const addPlayer = (playerID, username, multiplayer) => {
   return player;
 };
 
-const removePlayer = (playerID) => {
+const removePlayer = playerID => {
   delete players[playerID];
 };
 
@@ -54,7 +52,7 @@ const changePlayerScore = (playerID, points = 1) => {
   }
 };
 
-const resetPlayerScore = (playerID) => {
+const resetPlayerScore = playerID => {
   const player = getPlayer(playerID);
   if (!player) return;
 
