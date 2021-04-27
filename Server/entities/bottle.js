@@ -1,5 +1,5 @@
 class Bottle {
-  constructor(id, secondsToSpawn, offsetY, playerID, velocity, spin) {
+  constructor(id, playerID, offsetY, secondsToSpawn, velocity, spin) {
     this.id = id; //int
     this.playerID = playerID; //string
     this.secondsToSpawn = secondsToSpawn; //float
