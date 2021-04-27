@@ -286,8 +286,7 @@ class GameModel(private var controller: GameController, var playerID: String, va
         // create arrayLists with bottles and powerUps parsed from JSONObjects from the controller
         try {
             for (spriteData in bottleData) {
-                print(spriteData)
-                val bottle = Bottle(spriteData["id"] as Int, (spriteData["playerID"] as String), spriteData["offsetY"] as Int, 100,
+                val bottle = Bottle(spriteData["id"] as Int, (spriteData["playerID"] as String), spriteData["offsetY"] as Int, spriteData["velocity"] as Int,
                         (spriteData["spin"] as Double).toFloat(), (spriteData["secondsToSpawn"] as Double).toFloat(), scale, playerID, textures)
                 inputBottles.add(bottle)
             }

@@ -5,7 +5,7 @@ const limit = 40;
 const addHighscore = (player1, player2) => {
   if (!player1 && !player2) return;
 
-  fs.readFile('./db/highscore', (err, data) => {
+  fs.readFile('../db/highscore', (err, data) => {
     let list = JSON.parse(data);
 
     const currentPlayer1 = player1 ? list[player1.username] : 0;
@@ -23,12 +23,12 @@ const addHighscore = (player1, player2) => {
       .sort(([, a], [, b]) => b - a)
       .reduce((r, [k, v]) => ({ ...r, [k]: v }), {});
 
-    fs.writeFile('./db/highscore', JSON.stringify(sorted), err => { })
+    fs.writeFile('../db/highscore', JSON.stringify(sorted), err => { })
   });
 };
 
 const getHighscores = () => {
-  const data = fs.readFileSync('./db/highscore');
+  const data = fs.readFileSync('../db/highscore');
 
   const list = JSON.parse(data.toString() || '{}');
 
