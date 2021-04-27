@@ -67,10 +67,10 @@ io.on("connection", (socket) => {
   });
 
   socket.on("highscore", () => {
+    console.log(colors.yellow, "Sending highscore to" + socket.id);
+
     const list = getHighscores();
     socket.emit("highscore", list);
-
-    console.log(colors.yellow, "Sending highscore to" + socket.id);
   });
 
   socket.on("disconnect", () => {
@@ -115,7 +115,7 @@ const setupGame = (socket, multiplayer, username) => {
       " and " + player.enemyID + " matched up..");
   }
   else {
-    console.log(colors.green, "Starting" + gameType + socket.id);
+    console.log(colors.green, "Starting " + gameType + socket.id);
   }
 
   const powerupTimer = gameDuration / 2 + Math.random() * 10;
