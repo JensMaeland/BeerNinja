@@ -30,9 +30,6 @@ const gameTick = (socket, multiplayer = true, timer = 0, enemyID = null) => {
       ? getPlayer(player.enemyID)
       : null;
 
-  console.log(gameDuration * 1000);
-  console.log(player);
-  console.log(multiplayer);
   if (timer < gameDuration * 1000 && player && (!multiplayer || enemy)) {
     timer += multiplayer ? multiplayerFrequency : soloFrequency;
 

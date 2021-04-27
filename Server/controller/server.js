@@ -141,7 +141,7 @@ const setupGame = (socket, multiplayer, username) => {
   });
 
   // Setting up a gameTick, to frequently update clients on gameState
-  gameTick(socket, true);
+  gameTick(socket, multiplayer);
 
   console.log(colors.yellow, "Currently " +
     Object.keys(currentGames).length + " concurrent games.");
