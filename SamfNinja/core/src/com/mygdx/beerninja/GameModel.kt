@@ -9,17 +9,42 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.mygdx.beerninja.Entities.Bottle
 import com.mygdx.beerninja.Entities.CaughtBottle
 import com.mygdx.beerninja.Entities.Touch
+import com.mygdx.beerninja.Systems.MatrixRotation
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 import java.util.*
 import kotlin.math.sign
 
-class GameModel(private var controller: GameController, var playerID: String, var enemyID: String, var username: String, var enemyUsername: String, bottleData: ArrayList<JSONObject>, powerupData: ArrayList<JSONObject>, var multiplayer: Boolean, var devMode: Boolean, var gameDuration: Int, var powerupTimer: Float, scale: Int, private var drawer: SpriteBatch, private var soundManager: AssetManager, textures: HashMap<String, Texture>) {
+/*
+Game MODEL, contains the data and functions to alter the state
+Part of the MVC Pattern
+
+Represents the current game, maximum one at a time
+ */
+
+class GameModel(
+        private var controller: GameController,
+        var playerID: String,
+        var enemyID: String,
+        var username: String,
+        var enemyUsername: String,
+        bottleData: ArrayList<JSONObject>,
+        powerupData: ArrayList<JSONObject>,
+        var multiplayer: Boolean,
+        var devMode: Boolean,
+        var gameDuration: Int,
+        var powerupTimer: Float,
+        private var drawer: SpriteBatch,
+        private var soundManager: AssetManager,
+        scale: Int,
+        textures: HashMap<String, Texture>) {
+
     // bottle state
     private var bottles: ArrayList<Bottle>
     private var powerupBottles: ArrayList<Bottle>
     var latestCaughtBottle: CaughtBottle? = null
+    private var rotationSystem: MatrixRotation
 
     // touch state
     val touches = HashMap<Int, Touch>()
@@ -93,9 +118,7 @@ class GameModel(private var controller: GameController, var playerID: String, va
                 return false
             }
         }
-
     }
-
 
     // remove any caught bottle form the bottles list, and send to the controller and server
     private fun playerCaughtBottle(caughtBottle: CaughtBottle) {
@@ -155,7 +178,7 @@ class GameModel(private var controller: GameController, var playerID: String, va
 
         // check bottle hitBox for all spawned bottles
         for (beerBottle in beerBottles) {
-            val hitbox = beerBottle.getHitbox(gameTimer, drawer, devMode, scale)
+            val hitbox = beerBottle.getHitbox(gameTimer, drawer, devMode, scale, rotationSystem)
 
             // check touch hits with bottles
             if (touch.display && hitbox.left <= touchX && touchX <= hitbox.right) {
@@ -177,7 +200,7 @@ class GameModel(private var controller: GameController, var playerID: String, va
             if (hitbox.left > 0 && hitbox.top > 0 && hitbox.left < Gdx.graphics.width && hitbox.top < Gdx.graphics.height && !beerBottle.collision) {
                 // iterate through all the other spawned bottles
                 for (compareBottle in beerBottles) {
-                    val obstacle = compareBottle.getHitbox(gameTimer, drawer, devMode, scale)
+                    val obstacle = compareBottle.getHitbox(gameTimer, drawer, devMode, scale, rotationSystem)
                     // only compare the two bottles if they are different, and not part of the main bottles. PowerUp-bottles appended later are meant to overlap unless powerupCollisions is true
                     if (beerBottle.id != compareBottle.id && beerBottle.id != powerupId && (beerBottle.bottlePlayerId != compareBottle.bottlePlayerId || (powerupCollisions && beerBottle.id > totalNumberOfBottles))) {
                         // check if the two bottles hitBoxes overlap in both x and y
@@ -310,5 +333,7 @@ class GameModel(private var controller: GameController, var playerID: String, va
             touches[i] = Touch(i, false, textures)
             enemyTouches[i] = Touch(i, true, textures)
         }
+
+        rotationSystem = MatrixRotation()
     }
 }

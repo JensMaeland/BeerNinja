@@ -13,6 +13,11 @@ import com.mygdx.beerninja.Entities.RouteRequest
 import org.json.JSONArray
 import java.util.*
 
+/*
+Menu VIEW, included in the Main View and part of the MVC View
+
+ */
+
 class MenuView (val game: GameView) {
     private var smallFont: BitmapFont
     private var largeFont: BitmapFont

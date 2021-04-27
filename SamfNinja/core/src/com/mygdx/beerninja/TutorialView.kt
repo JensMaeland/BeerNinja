@@ -5,13 +5,20 @@ import com.badlogic.gdx.InputAdapter
 import com.badlogic.gdx.graphics.g2d.BitmapFont
 import com.mygdx.beerninja.Entities.Bottle
 import com.mygdx.beerninja.Entities.Touch
+import com.mygdx.beerninja.Systems.MatrixRotation
 import java.util.*
+
+/*
+Tutorial VIEW, included in the Menu View and part of the MVC View
+
+ */
 
 class TutorialView (game: GameView) {
    private var timer = 0f
    private var tutorialBottles: ArrayList<Pair<Bottle, String>>
    private var bottleIndex = 0
    private var cooldown = 1f
+   private var rotationSystem: MatrixRotation
 
    val touches = HashMap<Int, Touch>()
    var enemyTouches = HashMap<Int, Touch>()
@@ -110,7 +117,7 @@ class TutorialView (game: GameView) {
 
       val touchX = touch!!.x
       val touchY = game.screenHeight - touch.y
-      val hitbox = bottle.getHitbox(gameTimer, game.drawer, false, game.scale)
+      val hitbox = bottle.getHitbox(gameTimer, game.drawer, false, game.scale, rotationSystem)
 
       // check touch hits with bottle
       if (touch.display && hitbox.left <= touchX && touchX <= hitbox.right) {
@@ -134,5 +141,7 @@ class TutorialView (game: GameView) {
       tutorialBottles.add(Pair(Bottle(-1, "myBottle", game.scale * 150, 0, 1f, 0f, game.scale, "myBottle", game.textures), "Alle grønne flasker er dine!"))
       tutorialBottles.add(Pair(Bottle(-420, "powerup", game.scale * 150, 0, 1f, 0f, game.scale, "myBottle", game.textures), "Vær på utkikk etter samfkort!"))
       tutorialBottles.add(Pair(Bottle(-2, "enemyBottle", game.scale * 150, 0, 1f, 0f, game.scale, "myBottle", game.textures), "Hold deg unna blå bokser!"))
+
+      rotationSystem = MatrixRotation()
    }
 }

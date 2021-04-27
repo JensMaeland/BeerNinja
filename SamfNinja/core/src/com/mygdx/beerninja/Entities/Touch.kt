@@ -3,6 +3,12 @@ package com.mygdx.beerninja.Entities
 import com.badlogic.gdx.graphics.Texture
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 
+/*
+Touch ENTITY, represents sprite to be rendered on screen
+Part of the ECS pattern
+
+ */
+
 @JsonIgnoreProperties("texture")
 class Touch(var id: Int, enemy: Boolean, private var textures: HashMap<String, Texture>) {
     var x: Int = 0

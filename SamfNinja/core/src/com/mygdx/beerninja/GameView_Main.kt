@@ -13,6 +13,13 @@ import kotlin.math.abs
 import kotlin.math.roundToInt
 import kotlin.math.sign
 
+/*
+Game MAIN VIEW, responsible for render all graphics
+Part of the MVC Pattern
+
+Also responsible for starting up LibGDX application, therefore extends ApplicationAdapter
+ */
+
 class GameView : ApplicationAdapter() {
     // imported help-classes for graphics and texture
     lateinit var drawer: SpriteBatch

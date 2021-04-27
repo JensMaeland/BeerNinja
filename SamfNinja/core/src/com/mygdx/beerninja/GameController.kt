@@ -13,6 +13,13 @@ import org.json.JSONException
 import org.json.JSONObject
 import java.util.*
 
+/*
+Game CONTROLLER, moves data from the client model to the server
+Part of the MVC Pattern
+
+Is a singleton
+ */
+
 class GameController {
     private lateinit var socket: Socket
     private val socketUrl = "http://46.101.52.4:8080"
@@ -62,7 +69,7 @@ class GameController {
                 // create a new game model with provided data
                 loadingGame = null
                 newGameModel = GameModel(this, playerID, enemyID, username, enemyUsername, bottleData, powerupData,
-                        gameRequest.multiplayer, gameRequest.devMode, gameDuration, powerupTimer, scale, drawer, soundManager, textures)
+                        gameRequest.multiplayer, gameRequest.devMode, gameDuration, powerupTimer, drawer, soundManager, scale, textures)
                 if (newGameModel != null) {
                     // setup all socket/controller functions that will continuously communicate with server through the game
                     getTouches(newGameModel!!)

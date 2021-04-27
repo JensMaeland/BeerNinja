@@ -4,7 +4,16 @@ import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.graphics.g2d.TextureRegion
+import com.mygdx.beerninja.Components.Hitbox
+import com.mygdx.beerninja.Systems.MatrixRotation
 import kotlin.math.abs
+
+/*
+Bottle ENTITY, represents sprite to be rendered on screen
+Part of the ECS pattern
+
+Uses the Hitbox component
+ */
 
 class Bottle(var id: Int, var bottlePlayerId: String, y: Int, velocity: Int, private var bottleSpin: Float, var beerSpawnTime: Float, scale: Int, private var myPlayerId: String, private var textures: HashMap<String, Texture>) {
     var texture: TextureRegion? = null
@@ -114,13 +123,13 @@ class Bottle(var id: Int, var bottlePlayerId: String, y: Int, velocity: Int, pri
         return yStartPos - offset * offset * bottleVelocity * 3
     }
 
-    fun getHitbox(gameTime: Float, drawer: SpriteBatch, devMode: Boolean, scale: Int): Hitbox {
+    fun getHitbox(gameTime: Float, drawer: SpriteBatch, devMode: Boolean, scale: Int, rotationSystem: MatrixRotation): Hitbox {
         val beerWidth = texture!!.regionWidth * scale
         val beerHeight = texture!!.regionHeight * scale
         val minX = getXOffset(gameTime, scale)
         val minY = getYOffset(gameTime)
         val spinAngle = getSpin(gameTime)
-        hitbox.updateHitbox(minX, minY, beerWidth, beerHeight, spinAngle)
+        hitbox.updateHitbox(minX, minY, beerWidth, beerHeight, spinAngle, rotationSystem)
 
         // draw the hitboxes in devMode
         if (devMode) {
